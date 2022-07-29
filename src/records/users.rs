@@ -1,4 +1,3 @@
-use mobc_postgres::tokio_postgres;
 use mobc_postgres::tokio_postgres::Row;
 use sea_query::{Expr, PostgresDriver, PostgresQueryBuilder, Query};
 

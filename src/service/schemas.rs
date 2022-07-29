@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::records;
+use crate::records::tasks;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -12,7 +12,7 @@ pub enum ResourceType {
 pub struct TaskAttributes {
     pub title: String,
     pub description: String,
-    pub priority: records::TaskPriority,
+    pub priority: tasks::TaskPriority,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -24,7 +24,7 @@ pub struct TaskData {
 }
 
 impl TaskData {
-    pub fn new(id: i64, title: String, desc: String, priority: records::TaskPriority) -> Self {
+    pub fn new(id: i64, title: String, desc: String, priority: tasks::TaskPriority) -> Self {
         Self {
             id: id.to_string(),
             _type: ResourceType::Task,
@@ -43,7 +43,7 @@ pub struct Task {
 }
 
 impl Task {
-    pub fn new(id: i64, title: String, desc: String, priority: records::TaskPriority) -> Self {
+    pub fn new(id: i64, title: String, desc: String, priority: tasks::TaskPriority) -> Self {
         Self {
             data: TaskData::new(id, title, desc, priority),
         }
@@ -56,7 +56,7 @@ pub struct TaskList {
 }
 
 impl TaskList {
-    pub fn new(tasks: Vec<records::Task>) -> Self {
+    pub fn new(tasks: Vec<tasks::Task>) -> Self {
         Self {
             data: tasks
                 .into_iter()

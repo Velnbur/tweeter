@@ -4,7 +4,7 @@ use warp::Reply;
 
 use super::schemas;
 use crate::db;
-use crate::records::Task;
+use crate::records::tasks::Task;
 
 #[derive(Error, Debug)]
 enum TaskError {
