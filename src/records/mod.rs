@@ -27,21 +27,23 @@ pub struct Task {
 }
 
 impl Task {
-    pub async fn create(self, db: &Pool) -> Result<i64, db::errors::Error> {
+    pub async fn create(title: String, desc: String, priority: TaskPriority, db: &Pool) -> Result<Task, db::errors::Error> {
         let con = db::get_con(db)
             .await?;
 
         let (query, values) = Query::insert()
             .into_table(Tasks::Table)
             .columns([Tasks::Title, Tasks::Description, Tasks::Priority])
-            .values_panic(vec![self.title.into(), self.description.into(), self.priority.into()])
-            .returning_col(Tasks::ID)
+            .values_panic(vec![title.into(), desc.into(), priority.into()])
+            .returning_all()
             .build(PostgresQueryBuilder);
 
-        let id = con.execute(query.as_str(), &values.as_params())
+        let rows = con.query(query.as_str(), &values.as_params())
             .await
             .map_err(db::errors::Error::QueryError)?;
-        Ok(id as i64)
+
+        let row = rows.get(0).unwrap(); // TODO:
+        Ok(Self::from(row))
     }
 
     pub async fn find(id: i64, db: &Pool) -> Result<Option<Task>, db::errors::Error> {
@@ -54,8 +56,6 @@ impl Task {
             .limit(1)
             .and_where(Expr::col(Tasks::ID).eq(id))
             .build(PostgresQueryBuilder);
-
-        println!("{:?}, {:?}", query, values);
 
         let rows = con.query(query.as_str(), &values.as_params())
             .await

@@ -2,6 +2,7 @@ use crate::db;
 
 mod handlers;
 mod routing;
+mod schemas;
 
 
 pub async fn run(db: db::Pool) {
