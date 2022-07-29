@@ -1,7 +1,6 @@
-use sea_query::{Expr, PostgresDriver, PostgresQueryBuilder, Query, Value};
-use serde::{Deserialize, Serialize};
 use mobc_postgres::tokio_postgres;
-use serde_repr::{Serialize_repr, Deserialize_repr};
+use sea_query::{Expr, PostgresDriver, PostgresQueryBuilder, Query, Value};
+use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use crate::db;
 use crate::db::Pool;
@@ -9,6 +8,7 @@ use crate::records::tables::Tasks;
 
 pub mod migrations;
 mod tables;
+mod users;
 
 #[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug)]
 #[repr(i16)]
@@ -18,7 +18,6 @@ pub enum TaskPriority {
     Urgent,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
 pub struct Task {
     pub id: i64,
     pub title: String,
@@ -27,9 +26,14 @@ pub struct Task {
 }
 
 impl Task {
-    pub async fn create(title: String, desc: String, priority: TaskPriority, db: &Pool) -> Result<Task, db::errors::Error> {
-        let con = db::get_con(db)
-            .await?;
+    pub async fn create(
+        title: String,
+        desc: String,
+        priority: TaskPriority,
+        db: &Pool,
+    ) -> Result<Task, db::errors::Error> {
+
+        let con = db::get_con(db).await?;
 
         let (query, values) = Query::insert()
             .into_table(Tasks::Table)
@@ -38,17 +42,16 @@ impl Task {
             .returning_all()
             .build(PostgresQueryBuilder);
 
-        let rows = con.query(query.as_str(), &values.as_params())
-            .await
-            .map_err(db::errors::Error::QueryError)?;
+        let rows = con
+            .query(query.as_str(), &values.as_params())
+            .await?;
 
         let row = rows.get(0).unwrap(); // TODO:
         Ok(Self::from(row))
     }
 
     pub async fn find(id: i64, db: &Pool) -> Result<Option<Task>, db::errors::Error> {
-        let con = db::get_con(db)
-            .await?;
+        let con = db::get_con(db).await?;
 
         let (query, values) = Query::select()
             .from(Tasks::Table)
@@ -57,7 +60,8 @@ impl Task {
             .and_where(Expr::col(Tasks::ID).eq(id))
             .build(PostgresQueryBuilder);
 
-        let rows = con.query(query.as_str(), &values.as_params())
+        let rows = con
+            .query(query.as_str(), &values.as_params())
             .await
             .map_err(db::errors::Error::QueryError)?;
 
@@ -69,21 +73,19 @@ impl Task {
     }
 
     pub async fn select(db: &Pool) -> Result<Vec<Task>, db::errors::Error> {
-        let con = db::get_con(db)
-            .await?;
+        let con = db::get_con(db).await?;
 
         let (query, values) = Query::select()
             .from(Tasks::Table)
             .columns([Tasks::ID, Tasks::Title, Tasks::Description, Tasks::Priority])
             .build(PostgresQueryBuilder);
 
-        let rows = con.query(query.as_str(), &values.as_params())
+        let rows = con
+            .query(query.as_str(), &values.as_params())
             .await
             .map_err(db::errors::Error::QueryError)?;
 
-        Ok(rows.into_iter()
-            .map(|row|  Self::from(&row))
-            .collect())
+        Ok(rows.into_iter().map(|row| Self::from(&row)).collect())
     }
 }
 
@@ -105,7 +107,7 @@ impl TryFrom<i16> for TaskPriority {
             1 => Ok(Self::Normal),
             2 => Ok(Self::High),
             3 => Ok(Self::Urgent),
-            _ => Err(())
+            _ => Err(()),
         }
     }
 }
@@ -116,9 +118,8 @@ impl From<&tokio_postgres::Row> for Task {
             id: r.get(0),
             title: r.get(1),
             description: r.get(2),
-            priority: TaskPriority::try_from(
-                r.get::<usize, i16>(3)
-            ).unwrap_or(TaskPriority::Normal),
+            priority: TaskPriority::try_from(r.get::<usize, i16>(3))
+                .unwrap_or(TaskPriority::Normal),
         }
     }
 }
