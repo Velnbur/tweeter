@@ -5,7 +5,6 @@ use crate::db::{self, Pool};
 use crate::records::tables::Users;
 
 pub struct User {
-    pub id: i64,
     pub public_key: String,
 }
 
@@ -28,14 +27,14 @@ impl User {
         Ok(Self::from(row))
     }
 
-    pub async fn find(id: i64, db: &Pool) -> Result<Option<Self>, db::errors::Error> {
+    pub async fn find(pub_key: String, db: &Pool) -> Result<Option<Self>, db::errors::Error> {
         let con = db::get_con(db).await?;
 
         let (query, values) = Query::select()
             .from(Users::Table)
-            .columns([Users::ID, Users::PublicKey])
+            .columns([Users::PublicKey])
             .limit(1)
-            .and_where(Expr::col(Users::ID).eq(id))
+            .and_where(Expr::col(Users::PublicKey).eq(pub_key))
             .build(PostgresQueryBuilder);
 
         let rows = con.query(query.as_str(), &values.as_params())
@@ -53,8 +52,7 @@ impl User {
 impl From<&Row> for User {
     fn from(r: &Row) -> Self {
         Self {
-            id: r.get(0),
-            public_key: r.get(1),
+            public_key: r.get(0),
         }
     }
 }

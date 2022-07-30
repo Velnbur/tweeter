@@ -1,17 +1,16 @@
 use sea_query::Iden;
 
 #[derive(Iden)]
-pub(super) enum Tasks {
+pub(super) enum Tweets {
     Table,
     ID,
     Title,
     Description,
-    Priority,
+    UserID,
 }
 
 #[derive(Iden)]
 pub(super) enum Users {
     Table,
-    ID,
     PublicKey,
 }

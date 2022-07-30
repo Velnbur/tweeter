@@ -1,9 +1,7 @@
 use crate::db;
 
-mod handlers;
 mod routing;
-mod schemas;
-
+mod handlers;
 
 pub async fn run(db: db::Pool) {
     warp::serve(routing::route(db))
