@@ -40,6 +40,9 @@ async fn migrate_users(db: &Connection) -> Result<(), tokio_postgres::Error> {
         .table(Users::Table)
         .if_not_exists()
         .col(ColumnDef::new(Users::PublicKey).text().primary_key())
+        .col(ColumnDef::new(Users::Username).char().char_len(50).not_null())
+        .col(ColumnDef::new(Users::PublicKey).text().not_null())
+        .col(ColumnDef::new(Users::ImageURL).char().char_len(100).not_null())
         .build(PostgresQueryBuilder);
 
     println!("{}", sql);

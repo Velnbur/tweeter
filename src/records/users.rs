@@ -6,16 +6,22 @@ use crate::records::tables::Users;
 
 pub struct User {
     pub public_key: String,
+    pub username: String,
+    pub image_url: String,
 }
 
 impl User {
-    pub async fn create(public_key: String, db: &Pool) -> Result<Self, db::errors::Error> {
+    pub async fn create(self, db: &Pool) -> Result<Self, db::errors::Error> {
         let con = db::get_con(db).await?;
 
         let (query, values) = Query::insert()
             .into_table(Users::Table)
             .columns([Users::PublicKey])
-            .values_panic(vec![public_key.into()])
+            .values_panic(vec![
+                self.public_key.into(),
+                self.username.into(),
+                self.image_url.into(),
+            ])
             .returning_all()
             .build(PostgresQueryBuilder);
 
@@ -53,6 +59,8 @@ impl From<&Row> for User {
     fn from(r: &Row) -> Self {
         Self {
             public_key: r.get(0),
+            username: r.get(1),
+            image_url: r.get(2),
         }
     }
 }

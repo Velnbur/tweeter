@@ -13,4 +13,6 @@ pub(super) enum Tweets {
 pub(super) enum Users {
     Table,
     PublicKey,
+    Username,
+    ImageURL,
 }
