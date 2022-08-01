@@ -2,6 +2,7 @@ use mobc_postgres::tokio_postgres::Row;
 use sea_query::{Expr, PostgresDriver, PostgresQueryBuilder, Query};
 
 use crate::db::{self, Pool};
+use crate::records::errors::RecordsError;
 use crate::records::tables::Users;
 
 pub struct User {
@@ -11,8 +12,8 @@ pub struct User {
 }
 
 impl User {
-    pub async fn create(self, db: &Pool) -> Result<Self, db::errors::Error> {
-        let con = db::get_con(db).await?;
+    pub async fn create(self, db: &Pool) -> Result<Self, RecordsError> {
+        let con = db.get().await?;
 
         let (query, values) = Query::insert()
             .into_table(Users::Table)
@@ -33,8 +34,8 @@ impl User {
         Ok(Self::from(row))
     }
 
-    pub async fn find(pub_key: String, db: &Pool) -> Result<Option<Self>, db::errors::Error> {
-        let con = db::get_con(db).await?;
+    pub async fn find(pub_key: String, db: &Pool) -> Result<Option<Self>, RecordsError> {
+        let con = db.get().await?;
 
         let (query, values) = Query::select()
             .from(Users::Table)

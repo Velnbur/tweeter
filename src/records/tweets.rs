@@ -3,6 +3,7 @@ use sea_query::{Expr, PostgresDriver, PostgresQueryBuilder, Query};
 use mobc_postgres::tokio_postgres;
 use crate::db;
 use crate::db::Pool;
+use crate::records::errors::RecordsError;
 use super::tables::Tweets;
 
 pub struct Tweet {
@@ -18,9 +19,9 @@ impl Tweet {
         desc: String,
         user_id: String,
         db: &Pool,
-    ) -> Result<Self, db::errors::Error> {
+    ) -> Result<Self, RecordsError> {
 
-        let con = db::get_con(db).await?;
+        let con = db.get().await?;
 
         let (query, values) = Query::insert()
             .into_table(Tweets::Table)
@@ -37,8 +38,8 @@ impl Tweet {
         Ok(Self::from(row))
     }
 
-    pub async fn find(id: i64, db: &Pool) -> Result<Option<Self>, db::errors::Error> {
-        let con = db::get_con(db).await?;
+    pub async fn find(id: i64, db: &Pool) -> Result<Option<Self>, RecordsError> {
+        let con = db.get().await?;
 
         let (query, values) = Query::select()
             .from(Tweets::Table)
@@ -49,8 +50,7 @@ impl Tweet {
 
         let rows = con
             .query(query.as_str(), &values.as_params())
-            .await
-            .map_err(db::errors::Error::QueryError)?;
+            .await?;
 
         let row = match rows.get(0) {
             Some(val) => val,
@@ -59,8 +59,8 @@ impl Tweet {
         Ok(Some(Self::from(row)))
     }
 
-    pub async fn select(db: &Pool) -> Result<Vec<Self>, db::errors::Error> {
-        let con = db::get_con(db).await?;
+    pub async fn select(db: &Pool) -> Result<Vec<Self>, RecordsError> {
+        let con = db.get().await?;
 
         let (query, values) = Query::select()
             .from(Tweets::Table)
@@ -69,8 +69,7 @@ impl Tweet {
 
         let rows = con
             .query(query.as_str(), &values.as_params())
-            .await
-            .map_err(db::errors::Error::QueryError)?;
+            .await?;
 
         Ok(rows.into_iter().map(|row| Self::from(&row)).collect())
     }

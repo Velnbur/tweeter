@@ -4,14 +4,8 @@ use tokio_postgres::{Config, Error};
 use std::str::FromStr;
 use std::time::Duration;
 
-pub mod errors;
-
 pub type Pool = mobc::Pool<PgConnectionManager<NoTls>>;
 pub type Connection = mobc::Connection<PgConnectionManager<NoTls>>;
-
-pub async fn get_con(pool: &Pool) -> Result<Connection, errors::Error> {
-    pool.get().await.map_err(errors::Error::PoolError)
-}
 
 const DB_POOL_MAX_OPEN: u64 = 32;
 const DB_POOL_MAX_IDLE: u64 = 8;

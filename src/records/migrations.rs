@@ -1,11 +1,12 @@
-use crate::db::Connection;
+use crate::db::{Pool, Connection};
 use crate::records::tables::{Tweets, Users};
 use mobc_postgres::tokio_postgres;
 use sea_query::{ColumnDef, ForeignKey, ForeignKeyAction, PostgresQueryBuilder, Table};
 
-pub async fn migrate(db: Connection) -> Result<(), tokio_postgres::Error> {
-    migrate_users(&db).await?;
-    migrate_tweets(&db).await?;
+pub async fn migrate(db: Pool) -> Result<(), mobc::Error<tokio_postgres::Error>> {
+    let con = db.get().await?;
+    migrate_users(&con).await?;
+    migrate_tweets(&con).await?;
     Ok(())
 }
 
