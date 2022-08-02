@@ -20,10 +20,7 @@ async fn main() {
 
     let config = Config::from_file(args.config);
 
-    let con = db::get_con(&config.db)
-        .await
-        .expect("Failed to get connection");
-    records::migrations::migrate(con)
+    records::migrations::migrate(&config.db)
         .await
         .expect("Failed to migrate");
 

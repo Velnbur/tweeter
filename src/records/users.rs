@@ -1,7 +1,7 @@
 use mobc_postgres::tokio_postgres::Row;
 use sea_query::{Expr, PostgresDriver, PostgresQueryBuilder, Query};
 
-use crate::db::{self, Pool};
+use crate::db::Pool;
 use crate::records::errors::RecordsError;
 use crate::records::tables::Users;
 

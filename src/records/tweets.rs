@@ -1,7 +1,6 @@
 use sea_query::{Expr, PostgresDriver, PostgresQueryBuilder, Query};
 
 use mobc_postgres::tokio_postgres;
-use crate::db;
 use crate::db::Pool;
 use crate::records::errors::RecordsError;
 use super::tables::Tweets;
