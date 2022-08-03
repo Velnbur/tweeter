@@ -1,9 +1,13 @@
 use serde::{Deserialize, Serialize};
-use crate::records;
+use warp::hyper::header::CONTENT_TYPE;
+use warp::hyper::{http, Body, StatusCode};
+use warp::Reply;
 
+use super::key::Key;
 use super::relation::Relation;
 use super::resource_type::ResourceType;
-use super::key::Key;
+use super::JSON_CONTENT_TYPE;
+use crate::records;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TweetAttributes {
@@ -75,9 +79,9 @@ impl From<records::tweets::Tweet> for TweetData {
             },
             relationships: TweetRelations {
                 author: Relation {
-                    data: Key::new(tweet.user_id, ResourceType::User)
-                }
-            }
+                    data: Key::new(tweet.user_id, ResourceType::User),
+                },
+            },
         }
     }
 }
@@ -93,10 +97,27 @@ impl From<records::tweets::Tweet> for Tweet {
 impl From<Vec<records::tweets::Tweet>> for TweetList {
     fn from(tasks: Vec<records::tweets::Tweet>) -> Self {
         Self {
-            data: tasks
-                .into_iter()
-                .map(|raw| TweetData::from(raw))
-                .collect(),
+            data: tasks.into_iter().map(|raw| TweetData::from(raw)).collect(),
         }
+    }
+}
+
+impl Reply for Tweet {
+    fn into_response(self) -> warp::reply::Response {
+        http::Response::builder()
+            .status(StatusCode::OK)
+            .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
+            .body(Body::from(serde_json::to_string(&self).unwrap()))
+            .unwrap()
+    }
+}
+
+impl Reply for TweetList {
+    fn into_response(self) -> warp::reply::Response {
+        http::Response::builder()
+            .status(StatusCode::OK)
+            .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
+            .body(Body::from(serde_json::to_string(&self).unwrap()))
+            .unwrap()
     }
 }

@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
 use crate::records;
 use crate::service::handlers::schemas::resource_type::ResourceType;
+use serde::{Deserialize, Serialize};
 
 use super::key::Key;
 
@@ -42,7 +42,6 @@ pub struct UserData {
     pub attributes: UserAttributes,
 }
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
     pub data: UserData,
@@ -55,7 +54,7 @@ impl From<records::users::User> for UserData {
             attributes: UserAttributes {
                 username: user.username,
                 image_url: user.image_url,
-            }
+            },
         }
     }
 }
@@ -63,7 +62,7 @@ impl From<records::users::User> for UserData {
 impl From<records::users::User> for User {
     fn from(user: records::users::User) -> Self {
         Self {
-            data: UserData::from(user)
+            data: UserData::from(user),
         }
     }
 }
