@@ -1,4 +1,4 @@
-use crate::db::{Pool, Connection};
+use crate::db::{Connection, Pool};
 use crate::records::tables::{Tweets, Users};
 use mobc_postgres::tokio_postgres;
 use sea_query::{ColumnDef, ForeignKey, ForeignKeyAction, PostgresQueryBuilder, Table};
@@ -27,11 +27,10 @@ async fn migrate_tweets(db: &Connection) -> Result<(), tokio_postgres::Error> {
             ForeignKey::create()
                 .from(Tweets::Table, Tweets::UserID)
                 .to(Users::Table, Users::PublicKey)
-                .on_delete(ForeignKeyAction::Cascade)
+                .on_delete(ForeignKeyAction::Cascade),
         )
         .build(PostgresQueryBuilder);
 
-    println!("{}", sql);
     db.batch_execute(&sql).await?;
     Ok(())
 }
@@ -41,12 +40,21 @@ async fn migrate_users(db: &Connection) -> Result<(), tokio_postgres::Error> {
         .table(Users::Table)
         .if_not_exists()
         .col(ColumnDef::new(Users::PublicKey).text().primary_key())
-        .col(ColumnDef::new(Users::Username).char().char_len(50).not_null())
-        .col(ColumnDef::new(Users::PublicKey).text().not_null())
-        .col(ColumnDef::new(Users::ImageURL).char().char_len(100).not_null())
+        .col(
+            ColumnDef::new(Users::Username)
+                .char()
+                .char_len(50)
+                .not_null()
+                .unique_key(),
+        )
+        .col(
+            ColumnDef::new(Users::ImageURL)
+                .char()
+                .char_len(100)
+                .not_null(),
+        )
         .build(PostgresQueryBuilder);
 
-    println!("{}", sql);
     db.batch_execute(&sql).await?;
     Ok(())
 }

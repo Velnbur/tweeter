@@ -39,7 +39,7 @@ pub struct TweetList {
 pub struct CreateTweetAttributes {
     pub title: String,
     pub description: String,
-    pub sign: String,
+    pub signature: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -52,6 +52,17 @@ pub struct CreateTweetData {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateTweet {
     pub data: CreateTweetData,
+}
+
+impl Into<records::tweets::Tweet> for CreateTweet {
+    fn into(self) -> records::tweets::Tweet {
+        records::tweets::Tweet {
+            id: 0,
+            title: self.data.attributes.title,
+            description: self.data.attributes.description,
+            user_id: "".to_string(),
+        }
+    }
 }
 
 impl From<records::tweets::Tweet> for TweetData {
