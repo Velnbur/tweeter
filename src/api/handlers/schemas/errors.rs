@@ -9,7 +9,8 @@ use super::JSON_CONTENT_TYPE;
 pub struct Error {
     pub status: String,
     pub title: String,
-    pub detail: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub detail: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -18,7 +19,7 @@ pub struct Errors {
 }
 
 impl Error {
-    pub fn new(status: StatusCode, title: String, detail: String) -> Self {
+    pub fn new(status: StatusCode, title: String, detail: Option<String>) -> Self {
         Self {
             status: status.to_string(),
             title,
@@ -28,7 +29,7 @@ impl Error {
 }
 
 impl Errors {
-    fn new_error_response(status: StatusCode, title: String, detail: String) -> Response {
+    fn new_error_response(status: StatusCode, title: String, detail: Option<String>) -> Response {
         http::Response::builder()
             .status(status)
             .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
@@ -41,7 +42,7 @@ impl Errors {
             .unwrap()
     }
 
-    pub fn internal_error(detail: String) -> Response {
+    pub fn internal_error(detail: Option<String>) -> Response {
         Self::new_error_response(
             StatusCode::INTERNAL_SERVER_ERROR,
             String::from("Internal Server Error"),
@@ -50,34 +51,26 @@ impl Errors {
     }
 
     pub fn not_found(detail: String) -> Response {
-        Self::new_error_response(StatusCode::NOT_FOUND, String::from("Not Found"), detail)
+        Self::new_error_response(
+            StatusCode::NOT_FOUND,
+            String::from("Not Found"),
+            Some(detail),
+        )
     }
 
     pub fn bad_request(detail: String) -> Response {
-        Self::new_error_response(StatusCode::BAD_REQUEST, String::from("Bad Request"), detail)
-    }
-
-    pub fn forbidden() -> Response {
         Self::new_error_response(
-            StatusCode::FORBIDDEN,
-            String::from("Forbidden"),
-            String::from(""),
+            StatusCode::BAD_REQUEST,
+            String::from("Bad Request"),
+            Some(detail),
         )
     }
 
     pub fn unauthorized() -> Response {
-        Self::new_error_response(
-            StatusCode::UNAUTHORIZED,
-            String::from("Forbidden"),
-            String::from(""),
-        )
+        Self::new_error_response(StatusCode::UNAUTHORIZED, String::from("Unauthorized"), None)
     }
 
     pub fn conflict() -> Response {
-        Self::new_error_response(
-            StatusCode::UNAUTHORIZED,
-            String::from("Forbidden"),
-            String::from(""),
-        )
+        Self::new_error_response(StatusCode::CONFLICT, String::from("Conflict"), None)
     }
 }

@@ -1,64 +1,47 @@
-use mobc_postgres::tokio_postgres;
 use mobc_postgres::tokio_postgres::error::SqlState;
 use mobc_postgres::tokio_postgres::Row;
 use sea_query::{Expr, PostgresDriver, PostgresQueryBuilder, Query};
-use thiserror::Error;
 
 use crate::db::Pool;
-use crate::records::errors::RecordsError;
 use crate::records::tables::Users;
+
+use super::errors::Errors;
 
 pub struct User {
     pub public_key: String,
     pub username: String,
-    pub image_url: String,
-}
-
-#[derive(Error, Debug)]
-pub enum UsersError {
-    #[error("username is used")]
-    InvalidUsername,
-    #[error("query error {0}")]
-    QueryError(#[from] tokio_postgres::Error),
-    #[error("failed to create connection {0}")]
-    ConnectionError(#[from] mobc::Error<tokio_postgres::Error>),
+    pub image_url: Option<String>,
 }
 
 impl User {
-    pub async fn create(self, db: &Pool) -> Result<Self, UsersError> {
-        let con = db.get().await.map_err(UsersError::ConnectionError)?;
+    pub async fn create(self, db: &Pool) -> Result<Self, Errors> {
+        let con = db.get().await?;
 
         let (query, values) = Query::insert()
             .into_table(Users::Table)
-            .columns([Users::PublicKey, Users::Username, Users::ImageURL])
-            .values_panic(vec![
-                self.public_key.into(),
-                self.username.into(),
-                self.image_url.into(),
-            ])
+            .columns([Users::PublicKey, Users::Username])
+            .values_panic(vec![self.public_key.into(), self.username.into()])
             .returning_all()
             .build(PostgresQueryBuilder);
 
-        let rows = match con.query(query.as_str(), &values.as_params()).await {
-            Ok(r) => r,
-            Err(err) => {
-                return match err.code().unwrap() {
-                    &SqlState::UNIQUE_VIOLATION => Err(UsersError::InvalidUsername),
-                    _ => Err(UsersError::QueryError(err)),
-                }
-            }
-        };
+        let rows = con
+            .query(query.as_str(), &values.as_params())
+            .await
+            .map_err(|err| match err.code().unwrap() {
+                &SqlState::UNIQUE_VIOLATION => Errors::InvalidUsername,
+                _ => Errors::QueryError(err),
+            })?;
 
-        let row = rows.get(0).unwrap(); // TODO:
+        let row = rows.get(0).unwrap(); // TODO: Something went totally wrong
         Ok(Self::from(row))
     }
 
-    pub async fn find(pub_key: String, db: &Pool) -> Result<Option<Self>, RecordsError> {
+    pub async fn find(pub_key: String, db: &Pool) -> Result<Option<Self>, Errors> {
         let con = db.get().await?;
 
         let (query, values) = Query::select()
             .from(Users::Table)
-            .columns([Users::PublicKey])
+            .columns([Users::PublicKey, Users::Username, Users::ImageURL])
             .limit(1)
             .and_where(Expr::col(Users::PublicKey).eq(pub_key))
             .build(PostgresQueryBuilder);
@@ -70,6 +53,7 @@ impl User {
             None => return Ok(None),
         };
 
+        log::debug!("Row: {:?}", row);
         Ok(Some(Self::from(row)))
     }
 }

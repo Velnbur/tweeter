@@ -47,12 +47,7 @@ async fn migrate_users(db: &Connection) -> Result<(), tokio_postgres::Error> {
                 .not_null()
                 .unique_key(),
         )
-        .col(
-            ColumnDef::new(Users::ImageURL)
-                .char()
-                .char_len(100)
-                .not_null(),
-        )
+        .col(ColumnDef::new(Users::ImageURL).char().char_len(100))
         .build(PostgresQueryBuilder);
 
     db.batch_execute(&sql).await?;

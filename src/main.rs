@@ -1,12 +1,13 @@
-mod service;
-mod records;
-pub mod db;
+mod api;
 mod config;
+mod db;
+mod records;
+mod signer;
 
+use crate::config::Config;
 use clap::Parser;
 use log::LevelFilter;
 use simplelog::{ColorChoice, TerminalMode};
-use crate::config::Config;
 
 /// Simple backend application
 #[derive(Parser, Debug)]
@@ -27,11 +28,12 @@ async fn main() {
         simplelog::Config::default(),
         TerminalMode::Stdout,
         ColorChoice::Auto,
-    ).expect("Failed to init logger");
+    )
+    .expect("Failed to init logger");
 
     records::migrations::migrate(&config.db)
         .await
         .expect("Failed to migrate");
 
-    service::run(config).await;
+    api::run(config).await;
 }

@@ -1,3 +1,4 @@
+pub mod rejection;
 pub(super) mod tweets;
 pub(super) mod users;
 

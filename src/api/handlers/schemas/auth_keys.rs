@@ -1,4 +1,4 @@
-use crate::service::handlers::schemas::resource_type::ResourceType;
+use crate::api::handlers::schemas::resource_type::ResourceType;
 
 use serde::{Deserialize, Serialize};
 use warp::hyper::header::CONTENT_TYPE;

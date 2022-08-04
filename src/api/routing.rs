@@ -1,52 +1,52 @@
 use std::convert::Infallible;
 use warp::Filter;
 
-use crate::db;
 use super::handlers;
+use crate::db;
 
-pub fn route(
-    db: db::Pool,
-) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+pub fn route(db: db::Pool) -> impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone {
     tweets_route(&db)
         .or(users_routes(&db))
+        .recover(handlers::rejection::handle_rejection)
 }
 
 fn tweets_route(
     pool: &db::Pool,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-    // GET /task/:i64
-    let get_by_id = warp::path!("tweet" / i64)
+    let root = warp::path("api").and(warp::path("tweets"));
+
+    // GET /api/tweets/:i64
+    let get_by_id = root
+        .and(warp::path::param::<i64>())
+        .and(warp::path::end())
         .and(warp::get())
         .and(with_db(pool.clone()))
         .and_then(handlers::tweets::get_by_id);
 
-    // * /api/tasks
-    let tweets = warp::path("tweets");
-
-    // POST /tasks
-    let create = tweets
+    // POST /api/tweets
+    let create = root
         .and(warp::post())
         .and(warp::header::header("Authorization"))
         .and(warp::body::json())
         .and(with_db(pool.clone()))
         .and_then(handlers::tweets::create);
 
-    // GET /api/tasks
-    let list = tweets
+    // GET /api/tweets
+    let list = root
         .and(warp::get())
         .and(with_db(pool.clone()))
         .and_then(handlers::tweets::get_list);
 
-    create.or(list).or(get_by_id)
+    create.or(get_by_id).or(list)
 }
 
 fn users_routes(
     pool: &db::Pool,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-    let root = warp::path("auth");
+    let auth = warp::path("api").and(warp::path("auth"));
 
     // POST /auth/register
-    let create = root
+    let create = auth
         .and(warp::path("register"))
         .and(warp::post())
         .and(warp::body::json())

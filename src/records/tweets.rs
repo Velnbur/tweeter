@@ -1,9 +1,8 @@
 use sea_query::{Expr, PostgresDriver, PostgresQueryBuilder, Query};
 
-use mobc_postgres::tokio_postgres;
+use super::{errors::Errors, tables::Tweets};
 use crate::db::Pool;
-use crate::records::errors::RecordsError;
-use super::tables::Tweets;
+use mobc_postgres::tokio_postgres;
 
 pub struct Tweet {
     pub id: i64,
@@ -13,43 +12,42 @@ pub struct Tweet {
 }
 
 impl Tweet {
-    pub async fn create(
-        title: String,
-        desc: String,
-        user_id: String,
-        db: &Pool,
-    ) -> Result<Self, RecordsError> {
-
+    pub async fn create(self, db: &Pool) -> Result<Self, Errors> {
         let con = db.get().await?;
 
         let (query, values) = Query::insert()
             .into_table(Tweets::Table)
             .columns([Tweets::Title, Tweets::Description, Tweets::UserID])
-            .values_panic(vec![title.into(), desc.into(), user_id.into()])
+            .values_panic(vec![
+                self.title.into(),
+                self.description.into(),
+                self.user_id.into(),
+            ])
             .returning_all()
             .build(PostgresQueryBuilder);
 
-        let rows = con
-            .query(query.as_str(), &values.as_params())
-            .await?;
+        let rows = con.query(query.as_str(), &values.as_params()).await?;
 
         let row = rows.get(0).unwrap(); // TODO:
         Ok(Self::from(row))
     }
 
-    pub async fn find(id: i64, db: &Pool) -> Result<Option<Self>, RecordsError> {
+    pub async fn find(id: i64, db: &Pool) -> Result<Option<Self>, Errors> {
         let con = db.get().await?;
 
         let (query, values) = Query::select()
             .from(Tweets::Table)
-            .columns([Tweets::ID, Tweets::Title, Tweets::Description, Tweets::UserID])
+            .columns([
+                Tweets::ID,
+                Tweets::Title,
+                Tweets::Description,
+                Tweets::UserID,
+            ])
             .limit(1)
             .and_where(Expr::col(Tweets::ID).eq(id))
             .build(PostgresQueryBuilder);
 
-        let rows = con
-            .query(query.as_str(), &values.as_params())
-            .await?;
+        let rows = con.query(query.as_str(), &values.as_params()).await?;
 
         let row = match rows.get(0) {
             Some(val) => val,
@@ -58,17 +56,20 @@ impl Tweet {
         Ok(Some(Self::from(row)))
     }
 
-    pub async fn select(db: &Pool) -> Result<Vec<Self>, RecordsError> {
+    pub async fn select(db: &Pool) -> Result<Vec<Self>, Errors> {
         let con = db.get().await?;
 
         let (query, values) = Query::select()
             .from(Tweets::Table)
-            .columns([Tweets::ID, Tweets::Title, Tweets::Description, Tweets::UserID])
+            .columns([
+                Tweets::ID,
+                Tweets::Title,
+                Tweets::Description,
+                Tweets::UserID,
+            ])
             .build(PostgresQueryBuilder);
 
-        let rows = con
-            .query(query.as_str(), &values.as_params())
-            .await?;
+        let rows = con.query(query.as_str(), &values.as_params()).await?;
 
         Ok(rows.into_iter().map(|row| Self::from(&row)).collect())
     }

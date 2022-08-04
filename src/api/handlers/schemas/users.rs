@@ -1,6 +1,7 @@
-use crate::records;
-use crate::service::handlers::schemas::resource_type::ResourceType;
 use serde::{Deserialize, Serialize};
+
+use super::resource_type::ResourceType;
+use crate::records;
 
 use super::key::Key;
 
@@ -24,7 +25,7 @@ impl Into<records::users::User> for CreateUser {
         records::users::User {
             public_key: "".to_string(),
             username: self.data.attributes.username,
-            image_url: "".to_string(),
+            image_url: None,
         }
     }
 }
@@ -32,7 +33,7 @@ impl Into<records::users::User> for CreateUser {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserAttributes {
     pub username: String,
-    pub image_url: String,
+    pub image_url: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
