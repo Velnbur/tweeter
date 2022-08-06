@@ -5,9 +5,14 @@ mod records;
 mod signer;
 
 use crate::config::Config;
+use signer::Singer;
+
 use clap::Parser;
 use log::LevelFilter;
+use records::tweets::Tweet;
 use simplelog::{ColorChoice, TerminalMode};
+use tokio::sync::mpsc;
+use tokio::sync::mpsc::{Receiver, Sender};
 
 /// Simple backend application
 #[derive(Parser, Debug)]
@@ -35,5 +40,12 @@ async fn main() {
         .await
         .expect("Failed to migrate");
 
-    api::run(config).await;
+    let (sender, receiver): (Sender<Tweet>, Receiver<Tweet>) = mpsc::channel(1000);
+
+    let mut signer = Singer::new(receiver, config.db.clone());
+    tokio::spawn(async move {
+        signer.start().await;
+    });
+
+    api::run(config, sender).await;
 }

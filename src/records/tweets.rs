@@ -4,10 +4,13 @@ use super::{errors::Errors, tables::Tweets};
 use crate::db::Pool;
 use mobc_postgres::tokio_postgres;
 
+#[derive(Clone)]
 pub struct Tweet {
     pub id: i64,
     pub title: String,
     pub description: String,
+    pub signature: String,
+    pub hash: Option<String>,
     pub user_id: String,
 }
 
@@ -17,10 +20,16 @@ impl Tweet {
 
         let (query, values) = Query::insert()
             .into_table(Tweets::Table)
-            .columns([Tweets::Title, Tweets::Description, Tweets::UserID])
+            .columns([
+                Tweets::Title,
+                Tweets::Description,
+                Tweets::UserID,
+                Tweets::Signature,
+            ])
             .values_panic(vec![
                 self.title.into(),
                 self.description.into(),
+                self.signature.into(),
                 self.user_id.into(),
             ])
             .returning_all()
@@ -41,6 +50,8 @@ impl Tweet {
                 Tweets::ID,
                 Tweets::Title,
                 Tweets::Description,
+                Tweets::Signature,
+                Tweets::Hash,
                 Tweets::UserID,
             ])
             .limit(1)
@@ -65,6 +76,8 @@ impl Tweet {
                 Tweets::ID,
                 Tweets::Title,
                 Tweets::Description,
+                Tweets::Signature,
+                Tweets::Hash,
                 Tweets::UserID,
             ])
             .build(PostgresQueryBuilder);
@@ -72,6 +85,22 @@ impl Tweet {
         let rows = con.query(query.as_str(), &values.as_params()).await?;
 
         Ok(rows.into_iter().map(|row| Self::from(&row)).collect())
+    }
+
+    pub async fn update(self, hash: String, db: &Pool) -> Result<Self, Errors> {
+        let con = db.get().await?;
+
+        let (query, values) = Query::update()
+            .table(Tweets::Table)
+            .value(Tweets::Hash, hash.into())
+            .and_where(Expr::col(Tweets::ID).eq(self.id))
+            .returning_all()
+            .build(PostgresQueryBuilder);
+
+        let rows = con.query(query.as_str(), &values.as_params()).await?;
+
+        let row = rows.get(0).unwrap();
+        Ok(Self::from(row))
     }
 }
 
@@ -81,7 +110,9 @@ impl From<&tokio_postgres::Row> for Tweet {
             id: r.get(0),
             title: r.get(1),
             description: r.get(2),
-            user_id: r.get(3),
+            signature: r.get(3),
+            hash: r.get(4),
+            user_id: r.get(5),
         }
     }
 }

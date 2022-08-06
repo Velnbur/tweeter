@@ -6,6 +6,8 @@ pub(super) enum Tweets {
     ID,
     Title,
     Description,
+    Signature,
+    Hash,
     UserID,
 }
 

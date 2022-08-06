@@ -1,3 +1,6 @@
+use tokio::sync::mpsc::Sender;
+use warp::hyper::StatusCode;
+use warp::reply::with_status;
 use warp::Reply;
 
 use crate::db;
@@ -8,11 +11,13 @@ use super::rejection::Errors;
 use super::schemas::tweets::CreateTweet as CreatTweetSchema;
 use super::schemas::tweets::Tweet as TweetSchema;
 use super::schemas::tweets::TweetList as TweetListSchema;
+use super::utils;
 
 pub async fn create(
     pub_key: String,
     req: CreatTweetSchema,
     db: db::Pool,
+    chan: Sender<TweetRecord>,
 ) -> Result<impl Reply, warp::Rejection> {
     let user = UserRecord::find(pub_key, &db)
         .await
@@ -23,14 +28,27 @@ pub async fn create(
         .ok_or(warp::reject::custom(Errors::Unauthorized))?;
 
     let mut tweet: TweetRecord = req.into();
+
+    let valid = utils::verify_signature(&user.public_key, &tweet.signature).map_err(|err| {
+        log::error!("Failed to decrypt signature: {}", err);
+        warp::reject::custom(Errors::Unauthorized)
+    })?;
+    if !valid {
+        return Err(warp::reject::custom(Errors::Unauthorized));
+    }
+
     tweet.user_id = user.public_key;
 
     let tweet = tweet.create(&db).await.map_err(|err| {
         log::error!("Failed to insert tweet: {}", err);
-        Errors::Database(err)
+        warp::reject::custom(Errors::Database(err))
     })?;
 
-    Ok(TweetSchema::from(tweet).into_response())
+    chan.send(tweet.clone()).await.map_err(|err| {
+        log::error!("Failed to send tweet through chan: {}", err);
+    });
+
+    Ok(with_status(TweetSchema::from(tweet), StatusCode::CREATED))
 }
 
 pub async fn get_by_id(id: i64, db: db::Pool) -> Result<impl Reply, warp::Rejection> {
@@ -42,7 +60,10 @@ pub async fn get_by_id(id: i64, db: db::Pool) -> Result<impl Reply, warp::Reject
         })?
         .ok_or(Errors::TweetNotFound)?;
 
-    Ok(TweetSchema::from(tweet).into_response())
+    if tweet.hash.is_none() {
+        return Ok(with_status(TweetSchema::from(tweet), StatusCode::ACCEPTED));
+    }
+    Ok(with_status(TweetSchema::from(tweet), StatusCode::OK))
 }
 
 pub async fn get_list(db: db::Pool) -> Result<impl Reply, warp::Rejection> {

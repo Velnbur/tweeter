@@ -1,17 +1,22 @@
 use std::convert::Infallible;
+use tokio::sync::mpsc::Sender;
 use warp::Filter;
 
 use super::handlers;
-use crate::db;
+use crate::{db, records::tweets::Tweet};
 
-pub fn route(db: db::Pool) -> impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone {
-    tweets_route(&db)
+pub fn route(
+    db: db::Pool,
+    sender: Sender<Tweet>,
+) -> impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone {
+    tweets_route(&db, &sender)
         .or(users_routes(&db))
         .recover(handlers::rejection::handle_rejection)
 }
 
 fn tweets_route(
     pool: &db::Pool,
+    sender: &Sender<Tweet>,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     let root = warp::path("api").and(warp::path("tweets"));
 
@@ -29,6 +34,7 @@ fn tweets_route(
         .and(warp::header::header("Authorization"))
         .and(warp::body::json())
         .and(with_db(pool.clone()))
+        .and(with_sender(sender.clone()))
         .and_then(handlers::tweets::create);
 
     // GET /api/tweets
@@ -58,4 +64,10 @@ fn users_routes(
 
 fn with_db(pool: db::Pool) -> impl Filter<Extract = (db::Pool,), Error = Infallible> + Clone {
     warp::any().map(move || pool.clone())
+}
+
+fn with_sender(
+    sender: Sender<Tweet>,
+) -> impl Filter<Extract = (Sender<Tweet>,), Error = Infallible> + Clone {
+    warp::any().map(move || sender.clone())
 }

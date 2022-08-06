@@ -1,10 +1,12 @@
-use crate::config;
+use tokio::sync::mpsc::Sender;
 
-mod routing;
+use crate::{config, records::tweets::Tweet};
+
 mod handlers;
+mod routing;
 
-pub async fn run(cfg: config::Config) {
-    warp::serve(routing::route(cfg.db))
+pub async fn run(cfg: config::Config, sender: Sender<Tweet>) {
+    warp::serve(routing::route(cfg.db, sender))
         .run(cfg.server)
         .await;
 }

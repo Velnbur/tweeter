@@ -13,6 +13,9 @@ use crate::records;
 pub struct TweetAttributes {
     pub title: String,
     pub description: String,
+    pub signature: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hash: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -64,6 +67,8 @@ impl Into<records::tweets::Tweet> for CreateTweet {
             id: 0,
             title: self.data.attributes.title,
             description: self.data.attributes.description,
+            signature: self.data.attributes.signature,
+            hash: None,
             user_id: "".to_string(),
         }
     }
@@ -76,6 +81,8 @@ impl From<records::tweets::Tweet> for TweetData {
             attributes: TweetAttributes {
                 title: tweet.title,
                 description: tweet.description,
+                signature: tweet.signature,
+                hash: tweet.hash,
             },
             relationships: TweetRelations {
                 author: Relation {

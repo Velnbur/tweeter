@@ -14,7 +14,7 @@ pub enum Errors {
     #[error("tweet not found")]
     TweetNotFound,
     #[error("failed to generate keys: {0}")]
-    GenerateKeys(#[from] openssl::ssl::Error),
+    GenerateKeys(#[from] openssl::error::ErrorStack),
     #[error("database error: {0}")]
     Database(#[from] records::errors::Errors),
 }
@@ -36,6 +36,7 @@ pub async fn handle_rejection(err: Rejection) -> Result<impl warp::Reply, Infall
         )),
         Errors::Unauthorized => Ok(schemas::errors::Errors::unauthorized()),
         Errors::InvalidName => Ok(schemas::errors::Errors::conflict()),
+        Errors::SignValidation(_) => Ok(schemas::errors::Errors::unauthorized()),
         Errors::GenerateKeys(err) => Ok(schemas::errors::Errors::internal_error(Some(
             err.to_string(),
         ))),
