@@ -22,6 +22,7 @@ async fn migrate_tweets(db: &Connection) -> Result<(), tokio_postgres::Error> {
         )
         .col(ColumnDef::new(Tweets::Title).text().not_null())
         .col(ColumnDef::new(Tweets::Description).text().not_null())
+        .col(ColumnDef::new(Tweets::Timestamp).big_integer().not_null())
         .col(ColumnDef::new(Tweets::UserID).text().not_null())
         .col(ColumnDef::new(Tweets::Signature).text().not_null())
         .col(ColumnDef::new(Tweets::Hash).text())

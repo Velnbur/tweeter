@@ -1,5 +1,6 @@
-mod raw;
 mod db;
+mod logger;
+mod raw;
 mod server;
 
 use std::fs;
@@ -14,11 +15,9 @@ pub struct Config {
 
 impl Config {
     pub fn from_file(filename: String) -> Self {
-        let content = fs::read_to_string(filename)
-            .expect("Failed to read config file");
+        let content = fs::read_to_string(filename).expect("Failed to read config file");
 
-        let raw_config: raw::Raw = toml::from_str(&content)
-            .expect("Failed to parse config");
+        let raw_config: raw::Raw = toml::from_str(&content).expect("Failed to parse config");
 
         raw_config.into()
     }

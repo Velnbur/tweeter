@@ -10,6 +10,7 @@ pub struct Tweet {
     pub title: String,
     pub description: String,
     pub signature: String,
+    pub timestamp: u32,
     pub hash: Option<String>,
     pub user_id: String,
 }
@@ -23,12 +24,14 @@ impl Tweet {
             .columns([
                 Tweets::Title,
                 Tweets::Description,
+                Tweets::Timestamp,
                 Tweets::UserID,
                 Tweets::Signature,
             ])
             .values_panic(vec![
                 self.title.into(),
                 self.description.into(),
+                self.timestamp.into(),
                 self.signature.into(),
                 self.user_id.into(),
             ])
@@ -50,6 +53,7 @@ impl Tweet {
                 Tweets::ID,
                 Tweets::Title,
                 Tweets::Description,
+                Tweets::Timestamp,
                 Tweets::Signature,
                 Tweets::Hash,
                 Tweets::UserID,
@@ -76,6 +80,7 @@ impl Tweet {
                 Tweets::ID,
                 Tweets::Title,
                 Tweets::Description,
+                Tweets::Timestamp,
                 Tweets::Signature,
                 Tweets::Hash,
                 Tweets::UserID,
@@ -110,9 +115,10 @@ impl From<&tokio_postgres::Row> for Tweet {
             id: r.get(0),
             title: r.get(1),
             description: r.get(2),
-            signature: r.get(3),
-            hash: r.get(4),
-            user_id: r.get(5),
+            timestamp: r.get(3),
+            signature: r.get(4),
+            hash: r.get(5),
+            user_id: r.get(6),
         }
     }
 }

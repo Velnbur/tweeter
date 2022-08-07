@@ -32,5 +32,10 @@ pub fn verify_signature(
 
     let verifier = Verifier::new(MessageDigest::sha256(), &pkey)?;
 
+    verifier.update(content.id.to_string().as_bytes());
+    verifier.update(content.title.as_bytes());
+    verifier.update(content.descritpion.as_bytes());
+    verifier.update(content.timestamp.to_string().as_bytes());
+
     verifier.verify(signature.as_bytes())
 }
