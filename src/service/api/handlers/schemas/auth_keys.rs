@@ -1,5 +1,3 @@
-use crate::api::handlers::schemas::resource_type::ResourceType;
-
 use serde::{Deserialize, Serialize};
 use warp::hyper::header::CONTENT_TYPE;
 use warp::hyper::http;
@@ -7,6 +5,7 @@ use warp::hyper::Body;
 use warp::hyper::StatusCode;
 use warp::Reply;
 
+use super::resource_type::ResourceType;
 use super::JSON_CONTENT_TYPE;
 
 #[derive(Debug, Serialize, Deserialize)]

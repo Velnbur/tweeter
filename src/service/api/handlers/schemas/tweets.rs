@@ -14,6 +14,7 @@ pub struct TweetAttributes {
     pub title: String,
     pub description: String,
     pub signature: String,
+    pub timestamp: u32,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hash: Option<String>,
 }
@@ -46,6 +47,7 @@ pub struct TweetList {
 pub struct CreateTweetAttributes {
     pub title: String,
     pub description: String,
+    pub timestamp: u32,
     pub signature: String,
 }
 
@@ -68,6 +70,7 @@ impl Into<records::tweets::Tweet> for CreateTweet {
             title: self.data.attributes.title,
             description: self.data.attributes.description,
             signature: self.data.attributes.signature,
+            timestamp: self.data.attributes.timestamp,
             hash: None,
             user_id: "".to_string(),
         }
@@ -82,6 +85,7 @@ impl From<records::tweets::Tweet> for TweetData {
                 title: tweet.title,
                 description: tweet.description,
                 signature: tweet.signature,
+                timestamp: tweet.timestamp,
                 hash: tweet.hash,
             },
             relationships: TweetRelations {

@@ -1,7 +1,7 @@
 use std::convert::Infallible;
 
 use super::schemas;
-use crate::records;
+use crate::records::{self, tweets::Tweet};
 use thiserror::Error;
 use warp::Rejection;
 
@@ -11,12 +11,14 @@ pub enum Errors {
     InvalidName,
     #[error("user not found")]
     Unauthorized,
+    #[error("no access")]
+    Forbidden,
     #[error("tweet not found")]
     TweetNotFound,
-    #[error("failed to generate keys: {0}")]
-    GenerateKeys(#[from] openssl::error::ErrorStack),
     #[error("database error: {0}")]
     Database(#[from] records::errors::Errors),
+    #[error("failed to send through channel: {0}")]
+    ChannelSend(#[from] tokio::sync::mpsc::error::SendError<Tweet>),
 }
 
 impl warp::reject::Reject for Errors {}
@@ -35,9 +37,9 @@ pub async fn handle_rejection(err: Rejection) -> Result<impl warp::Reply, Infall
             "tweet not found".to_string(),
         )),
         Errors::Unauthorized => Ok(schemas::errors::Errors::unauthorized()),
+        Errors::Forbidden => Ok(schemas::errors::Errors::forbidden()),
         Errors::InvalidName => Ok(schemas::errors::Errors::conflict()),
-        Errors::SignValidation(_) => Ok(schemas::errors::Errors::unauthorized()),
-        Errors::GenerateKeys(err) => Ok(schemas::errors::Errors::internal_error(Some(
+        Errors::ChannelSend(err) => Ok(schemas::errors::Errors::internal_error(Some(
             err.to_string(),
         ))),
         Errors::Database(err) => Ok(schemas::errors::Errors::internal_error(Some(

@@ -1,15 +1,15 @@
 mod api;
 mod signer;
 
-use signer::Singer;
+use signer::Hasher;
 use tokio::sync::mpsc::{self, Receiver, Sender};
 
 use crate::{config, records::tweets::Tweet};
 
-pub async fn run(cfg: &config::Config) {
+pub async fn run(cfg: config::Config) {
     let (sender, receiver): (Sender<Tweet>, Receiver<Tweet>) = mpsc::channel(1000);
 
-    let mut signer = Singer::new(receiver, cfg.db.clone());
+    let mut signer = Hasher::new(receiver, cfg.db.clone());
     tokio::spawn(async move {
         signer.start().await;
     });

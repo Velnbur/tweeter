@@ -25,5 +25,5 @@ pub async fn run() {
             .expect("Failed to migrate database");
     }
 
-    service::run(&config).await;
+    service::run(config).await;
 }

@@ -70,6 +70,10 @@ impl Errors {
         Self::new_error_response(StatusCode::UNAUTHORIZED, String::from("Unauthorized"), None)
     }
 
+    pub fn forbidden() -> Response {
+        Self::new_error_response(StatusCode::FORBIDDEN, String::from("Forbidden"), None)
+    }
+
     pub fn conflict() -> Response {
         Self::new_error_response(StatusCode::CONFLICT, String::from("Conflict"), None)
     }

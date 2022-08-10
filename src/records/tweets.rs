@@ -4,15 +4,15 @@ use super::{errors::Errors, tables::Tweets};
 use crate::db::Pool;
 use mobc_postgres::tokio_postgres;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Tweet {
     pub id: i64,
     pub title: String,
     pub description: String,
-    pub signature: String,
     pub timestamp: u32,
-    pub hash: Option<String>,
     pub user_id: String,
+    pub signature: String,
+    pub hash: Option<String>,
 }
 
 impl Tweet {
@@ -92,12 +92,19 @@ impl Tweet {
         Ok(rows.into_iter().map(|row| Self::from(&row)).collect())
     }
 
-    pub async fn update(self, hash: String, db: &Pool) -> Result<Self, Errors> {
+    pub async fn update(self, db: &Pool) -> Result<Self, Errors> {
         let con = db.get().await?;
 
         let (query, values) = Query::update()
             .table(Tweets::Table)
-            .value(Tweets::Hash, hash.into())
+            .values(vec![
+                (Tweets::Title, self.title.into()),
+                (Tweets::Description, self.description.into()),
+                (Tweets::Timestamp, self.timestamp.into()),
+                (Tweets::Signature, self.signature.into()),
+                (Tweets::Hash, self.hash.into()),
+                (Tweets::UserID, self.user_id.into()),
+            ])
             .and_where(Expr::col(Tweets::ID).eq(self.id))
             .returning_all()
             .build(PostgresQueryBuilder);
