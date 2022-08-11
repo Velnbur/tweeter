@@ -15,7 +15,7 @@ async fn migrate_tweets(db: &Connection) -> Result<(), tokio_postgres::Error> {
         .table(Tweets::Table)
         .if_not_exists()
         .col(
-            ColumnDef::new(Tweets::ID)
+            ColumnDef::new(Tweets::Id)
                 .big_integer()
                 .auto_increment()
                 .primary_key(),
@@ -23,12 +23,13 @@ async fn migrate_tweets(db: &Connection) -> Result<(), tokio_postgres::Error> {
         .col(ColumnDef::new(Tweets::Title).text().not_null())
         .col(ColumnDef::new(Tweets::Description).text().not_null())
         .col(ColumnDef::new(Tweets::Timestamp).integer().not_null())
-        .col(ColumnDef::new(Tweets::UserID).text().not_null())
+        .col(ColumnDef::new(Tweets::UserId).text().not_null())
         .col(ColumnDef::new(Tweets::Signature).text().not_null())
         .col(ColumnDef::new(Tweets::Hash).text())
+        .col(ColumnDef::new(Tweets::PreviousId).big_integer())
         .foreign_key(
             ForeignKey::create()
-                .from(Tweets::Table, Tweets::UserID)
+                .from(Tweets::Table, Tweets::UserId)
                 .to(Users::Table, Users::PublicKey)
                 .on_delete(ForeignKeyAction::Cascade),
         )

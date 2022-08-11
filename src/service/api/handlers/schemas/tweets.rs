@@ -22,6 +22,8 @@ pub struct TweetAttributes {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TweetRelations {
     pub author: Relation,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub previous: Option<Relation>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -73,12 +75,20 @@ impl Into<records::tweets::Tweet> for CreateTweet {
             timestamp: self.data.attributes.timestamp,
             hash: None,
             user_id: String::new(),
+            prev_id: None,
         }
     }
 }
 
 impl From<records::tweets::Tweet> for TweetData {
     fn from(tweet: records::tweets::Tweet) -> Self {
+        let previous = match tweet.prev_id {
+            None => None,
+            Some(id) => Some(Relation {
+                data: Key::new(id.to_string(), ResourceType::Tweet),
+            }),
+        };
+
         Self {
             key: Key::new(tweet.id, ResourceType::Tweet),
             attributes: TweetAttributes {
@@ -92,6 +102,7 @@ impl From<records::tweets::Tweet> for TweetData {
                 author: Relation {
                     data: Key::new(tweet.user_id, ResourceType::User),
                 },
+                previous,
             },
         }
     }

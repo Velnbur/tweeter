@@ -13,6 +13,7 @@ pub struct Tweet {
     pub user_id: String,
     pub signature: String,
     pub hash: Option<String>,
+    pub prev_id: Option<i64>,
 }
 
 impl Tweet {
@@ -25,9 +26,8 @@ impl Tweet {
                 Tweets::Title,
                 Tweets::Description,
                 Tweets::Timestamp,
-                Tweets::UserID,
+                Tweets::UserId,
                 Tweets::Signature,
-                Tweets::Hash,
             ])
             .values_panic(vec![
                 self.title.into(),
@@ -35,7 +35,6 @@ impl Tweet {
                 self.timestamp.into(),
                 self.user_id.into(),
                 self.signature.into(),
-                self.hash.into(),
             ])
             .returning_all()
             .build(PostgresQueryBuilder);
@@ -52,16 +51,17 @@ impl Tweet {
         let (query, values) = Query::select()
             .from(Tweets::Table)
             .columns([
-                Tweets::ID,
+                Tweets::Id,
                 Tweets::Title,
                 Tweets::Description,
                 Tweets::Timestamp,
-                Tweets::UserID,
+                Tweets::UserId,
                 Tweets::Signature,
                 Tweets::Hash,
+                Tweets::PreviousId,
             ])
             .limit(1)
-            .and_where(Expr::col(Tweets::ID).eq(id))
+            .and_where(Expr::col(Tweets::Id).eq(id))
             .build(PostgresQueryBuilder);
 
         let rows = con.query(query.as_str(), &values.as_params()).await?;
@@ -79,13 +79,14 @@ impl Tweet {
         let (query, values) = Query::select()
             .from(Tweets::Table)
             .columns([
-                Tweets::ID,
+                Tweets::Id,
                 Tweets::Title,
                 Tweets::Description,
                 Tweets::Timestamp,
-                Tweets::UserID,
+                Tweets::UserId,
                 Tweets::Signature,
                 Tweets::Hash,
+                Tweets::PreviousId,
             ])
             .build(PostgresQueryBuilder);
 
@@ -103,11 +104,12 @@ impl Tweet {
                 (Tweets::Title, self.title.into()),
                 (Tweets::Description, self.description.into()),
                 (Tweets::Timestamp, self.timestamp.into()),
-                (Tweets::UserID, self.user_id.into()),
+                (Tweets::UserId, self.user_id.into()),
                 (Tweets::Signature, self.signature.into()),
                 (Tweets::Hash, self.hash.into()),
+                (Tweets::PreviousId, self.prev_id.into()),
             ])
-            .and_where(Expr::col(Tweets::ID).eq(self.id))
+            .and_where(Expr::col(Tweets::Id).eq(self.id))
             .returning_all()
             .build(PostgresQueryBuilder);
 
@@ -128,6 +130,7 @@ impl From<&tokio_postgres::Row> for Tweet {
             user_id: r.get(4),
             signature: r.get(5),
             hash: r.get(6),
+            prev_id: r.get(7),
         }
     }
 }

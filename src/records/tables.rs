@@ -3,13 +3,14 @@ use sea_query::Iden;
 #[derive(Iden)]
 pub(super) enum Tweets {
     Table,
-    ID,
+    Id,
     Title,
     Description,
     Timestamp,
+    UserId,
     Signature,
     Hash,
-    UserID,
+    PreviousId,
 }
 
 #[derive(Iden)]

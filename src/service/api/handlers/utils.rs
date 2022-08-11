@@ -108,6 +108,7 @@ mod test {
             user_id: pub_key.clone(),
             signature: sign.to_string(),
             hash: None,
+            prev_id: None,
         };
 
         verify_tweet(&tweet).unwrap();

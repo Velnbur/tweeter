@@ -24,7 +24,10 @@ impl Hasher {
         loop {
             let mut tweet = self.chan.recv().await.unwrap();
             let last_hash = match self.last.clone() {
-                Some(l) => l.hash.unwrap(),
+                Some(l) => {
+                    tweet.prev_id = Some(l.id);
+                    l.hash.unwrap()
+                }
                 None => NULL_HASH.to_string(),
             };
 
