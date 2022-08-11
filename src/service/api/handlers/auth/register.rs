@@ -5,7 +5,8 @@ use crate::{
     db::Pool,
     records::{self, users::User as UserRecord},
     service::api::{
-        handlers::{errors::ErrorResponse, utils},
+        auth,
+        handlers::errors::ErrorResponse,
         schemas::{auth_keys::AuthKeys, users::CreateUser as CreateUserSchema},
     },
 };
@@ -16,7 +17,7 @@ pub async fn register(
 ) -> Result<impl IntoResponse, RegisterError> {
     let mut user: UserRecord = body.into();
 
-    let (priv_key, pub_key) = utils::generate_keys();
+    let (priv_key, pub_key) = auth::generate_keys();
 
     user.public_key = pub_key;
 

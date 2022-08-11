@@ -6,10 +6,8 @@ use crate::{
     db::Pool,
     records::{tweets::Tweet as TweetRecord, users::User as UserRecord},
     service::api::{
-        handlers::{
-            errors::ErrorResponse,
-            utils::{self, PubKey},
-        },
+        auth::{self, PubKey},
+        handlers::errors::ErrorResponse,
         schemas::tweets::{CreateTweet as CreateTweetSchema, Tweet as TweetSchema},
     },
 };
@@ -32,7 +30,7 @@ pub async fn create(
 
     tweet.user_id = user.public_key;
 
-    utils::verify_tweet(&tweet).map_err(|err| {
+    auth::verify_tweet(&tweet).map_err(|err| {
         log::debug!("Failed to verify signature: {err}");
         CreateError::FailedToVerify
     })?;
