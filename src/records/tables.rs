@@ -4,8 +4,7 @@ use sea_query::Iden;
 pub(super) enum Tweets {
     Table,
     Id,
-    Title,
-    Description,
+    Text,
     Timestamp,
     UserId,
     Signature,

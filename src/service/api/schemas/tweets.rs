@@ -7,8 +7,7 @@ use crate::records;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TweetAttributes {
-    pub title: String,
-    pub description: String,
+    pub text: String,
     pub signature: String,
     pub timestamp: i32,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -43,8 +42,7 @@ pub struct TweetList {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateTweetAttributes {
-    pub title: String,
-    pub description: String,
+    pub text: String,
     pub timestamp: i32,
     pub signature: String,
 }
@@ -65,8 +63,7 @@ impl Into<records::tweets::Tweet> for CreateTweet {
     fn into(self) -> records::tweets::Tweet {
         records::tweets::Tweet {
             id: 0,
-            title: self.data.attributes.title,
-            description: self.data.attributes.description,
+            text: self.data.attributes.text,
             signature: self.data.attributes.signature,
             timestamp: self.data.attributes.timestamp,
             hash: None,
@@ -88,8 +85,7 @@ impl From<records::tweets::Tweet> for TweetData {
         Self {
             key: Key::new(tweet.id, ResourceType::Tweet),
             attributes: TweetAttributes {
-                title: tweet.title,
-                description: tweet.description,
+                text: tweet.text,
                 signature: tweet.signature,
                 timestamp: tweet.timestamp,
                 hash: tweet.hash,

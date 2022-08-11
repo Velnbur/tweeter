@@ -50,8 +50,7 @@ impl Hasher {
         let mut hasher = Sha3_256::new();
 
         hasher.update(tweet.id.to_string().as_bytes());
-        hasher.update(tweet.title.as_bytes());
-        hasher.update(tweet.description.as_bytes());
+        hasher.update(tweet.text.as_bytes());
         hasher.update(tweet.timestamp.to_string().as_bytes());
         hasher.update(tweet.user_id.as_bytes());
         hasher.update(tweet.signature.as_bytes());

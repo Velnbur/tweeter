@@ -66,9 +66,7 @@ pub fn verify_signature(msg: &String, sign: &String, pub_key: &String) -> Result
 pub fn verify_tweet(tweet: &Tweet) -> Result<(), VerifyError> {
     let mut msg = String::new();
 
-    msg.push_str(&tweet.title.to_owned());
-    msg.push('\n');
-    msg.push_str(&tweet.description.to_owned());
+    msg.push_str(&tweet.text.to_owned());
     msg.push('\n');
     msg.push_str(&tweet.timestamp.to_string());
     msg.push('\n');
@@ -106,15 +104,12 @@ mod test {
         let sign_key =
             SigningKey::from_bytes(base64::decode(priv_key).unwrap().as_slice()).unwrap();
 
-        let title = "title";
-        let description = "description";
+        let text = "title";
         let timestamp = 123123;
 
         let mut msg = String::new();
 
-        msg.push_str(&title.to_owned());
-        msg.push('\n');
-        msg.push_str(&description.to_owned());
+        msg.push_str(&text.to_owned());
         msg.push('\n');
         msg.push_str(&timestamp.to_string());
         msg.push('\n');
@@ -124,8 +119,7 @@ mod test {
 
         let tweet = Tweet {
             id: 0,
-            title: title.to_string(),
-            description: description.to_string(),
+            text: text.to_string(),
             timestamp,
             user_id: pub_key.clone(),
             signature: base64::encode(sign.to_der()),

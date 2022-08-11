@@ -7,8 +7,7 @@ use mobc_postgres::tokio_postgres;
 #[derive(Clone, Debug)]
 pub struct Tweet {
     pub id: i64,
-    pub title: String,
-    pub description: String,
+    pub text: String,
     pub timestamp: i32,
     pub user_id: String,
     pub signature: String,
@@ -23,15 +22,13 @@ impl Tweet {
         let (query, values) = Query::insert()
             .into_table(Tweets::Table)
             .columns([
-                Tweets::Title,
-                Tweets::Description,
+                Tweets::Text,
                 Tweets::Timestamp,
                 Tweets::UserId,
                 Tweets::Signature,
             ])
             .values_panic(vec![
-                self.title.into(),
-                self.description.into(),
+                self.text.into(),
                 self.timestamp.into(),
                 self.user_id.into(),
                 self.signature.into(),
@@ -52,8 +49,7 @@ impl Tweet {
             .from(Tweets::Table)
             .columns([
                 Tweets::Id,
-                Tweets::Title,
-                Tweets::Description,
+                Tweets::Text,
                 Tweets::Timestamp,
                 Tweets::UserId,
                 Tweets::Signature,
@@ -80,8 +76,7 @@ impl Tweet {
             .from(Tweets::Table)
             .columns([
                 Tweets::Id,
-                Tweets::Title,
-                Tweets::Description,
+                Tweets::Text,
                 Tweets::Timestamp,
                 Tweets::UserId,
                 Tweets::Signature,
@@ -101,8 +96,7 @@ impl Tweet {
         let (query, values) = Query::update()
             .table(Tweets::Table)
             .values(vec![
-                (Tweets::Title, self.title.into()),
-                (Tweets::Description, self.description.into()),
+                (Tweets::Text, self.text.into()),
                 (Tweets::Timestamp, self.timestamp.into()),
                 (Tweets::UserId, self.user_id.into()),
                 (Tweets::Signature, self.signature.into()),
@@ -124,13 +118,12 @@ impl From<&tokio_postgres::Row> for Tweet {
     fn from(r: &tokio_postgres::Row) -> Self {
         Self {
             id: r.get(0),
-            title: r.get(1),
-            description: r.get(2),
-            timestamp: r.get(3),
-            user_id: r.get(4),
-            signature: r.get(5),
-            hash: r.get(6),
-            prev_id: r.get(7),
+            text: r.get(1),
+            timestamp: r.get(2),
+            user_id: r.get(3),
+            signature: r.get(4),
+            hash: r.get(5),
+            prev_id: r.get(6),
         }
     }
 }
