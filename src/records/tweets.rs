@@ -9,7 +9,7 @@ pub struct Tweet {
     pub id: i64,
     pub title: String,
     pub description: String,
-    pub timestamp: u32,
+    pub timestamp: i32,
     pub user_id: String,
     pub signature: String,
     pub hash: Option<String>,
@@ -27,13 +27,15 @@ impl Tweet {
                 Tweets::Timestamp,
                 Tweets::UserID,
                 Tweets::Signature,
+                Tweets::Hash,
             ])
             .values_panic(vec![
                 self.title.into(),
                 self.description.into(),
                 self.timestamp.into(),
-                self.signature.into(),
                 self.user_id.into(),
+                self.signature.into(),
+                self.hash.into(),
             ])
             .returning_all()
             .build(PostgresQueryBuilder);
@@ -54,9 +56,9 @@ impl Tweet {
                 Tweets::Title,
                 Tweets::Description,
                 Tweets::Timestamp,
+                Tweets::UserID,
                 Tweets::Signature,
                 Tweets::Hash,
-                Tweets::UserID,
             ])
             .limit(1)
             .and_where(Expr::col(Tweets::ID).eq(id))
@@ -81,9 +83,9 @@ impl Tweet {
                 Tweets::Title,
                 Tweets::Description,
                 Tweets::Timestamp,
+                Tweets::UserID,
                 Tweets::Signature,
                 Tweets::Hash,
-                Tweets::UserID,
             ])
             .build(PostgresQueryBuilder);
 
@@ -101,9 +103,9 @@ impl Tweet {
                 (Tweets::Title, self.title.into()),
                 (Tweets::Description, self.description.into()),
                 (Tweets::Timestamp, self.timestamp.into()),
+                (Tweets::UserID, self.user_id.into()),
                 (Tweets::Signature, self.signature.into()),
                 (Tweets::Hash, self.hash.into()),
-                (Tweets::UserID, self.user_id.into()),
             ])
             .and_where(Expr::col(Tweets::ID).eq(self.id))
             .returning_all()
@@ -123,9 +125,9 @@ impl From<&tokio_postgres::Row> for Tweet {
             title: r.get(1),
             description: r.get(2),
             timestamp: r.get(3),
-            signature: r.get(4),
-            hash: r.get(5),
-            user_id: r.get(6),
+            user_id: r.get(4),
+            signature: r.get(5),
+            hash: r.get(6),
         }
     }
 }

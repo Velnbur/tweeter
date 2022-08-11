@@ -41,7 +41,7 @@ pub fn verify_signature(msg: &String, sign: &String, pub_key: &String) -> Result
         .map_err(VerifyError::VerifyingError)
 }
 
-pub fn verify_tweet(tweet: &Tweet, pub_key: &String) -> Result<(), VerifyError> {
+pub fn verify_tweet(tweet: &Tweet) -> Result<(), VerifyError> {
     let mut msg = String::new();
 
     msg.push_str(&tweet.title.to_owned());
@@ -52,7 +52,7 @@ pub fn verify_tweet(tweet: &Tweet, pub_key: &String) -> Result<(), VerifyError> 
     msg.push('\n');
     msg.push_str(&tweet.user_id.to_owned());
 
-    verify_signature(&msg, &tweet.signature, pub_key)
+    verify_signature(&msg, &tweet.signature, &tweet.user_id)
 }
 
 #[cfg(test)]
@@ -110,6 +110,6 @@ mod test {
             hash: None,
         };
 
-        verify_tweet(&tweet, &pub_key).unwrap();
+        verify_tweet(&tweet).unwrap();
     }
 }

@@ -1,8 +1,7 @@
-use sha3::{Digest, Sha3_256};
-use tokio::sync::mpsc::Receiver;
-
 use crate::db::Pool;
 use crate::records::tweets::Tweet;
+use sha3::{Digest, Sha3_256};
+use tokio::sync::mpsc::Receiver;
 
 pub struct Hasher {
     db: Pool,
@@ -36,7 +35,10 @@ impl Hasher {
                     log::error!("Failed to hash tweet with error: {}", err);
                     continue;
                 }
-                Ok(tweet) => Some(tweet),
+                Ok(tweet) => {
+                    log::debug!("successfuly hashed: {}", tweet.id);
+                    Some(tweet)
+                }
             };
         }
     }

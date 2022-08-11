@@ -58,14 +58,6 @@ impl Errors {
         )
     }
 
-    pub fn bad_request(detail: String) -> Response {
-        Self::new_error_response(
-            StatusCode::BAD_REQUEST,
-            String::from("Bad Request"),
-            Some(detail),
-        )
-    }
-
     pub fn unauthorized() -> Response {
         Self::new_error_response(StatusCode::UNAUTHORIZED, String::from("Unauthorized"), None)
     }

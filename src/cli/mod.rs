@@ -23,6 +23,7 @@ pub async fn run() {
         records::migrations::migrate(&config.db)
             .await
             .expect("Failed to migrate database");
+        log::info!("migrations applied");
     }
 
     service::run(config).await;

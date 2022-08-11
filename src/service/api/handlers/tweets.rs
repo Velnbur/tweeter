@@ -29,12 +29,12 @@ pub async fn create(
 
     let mut tweet: TweetRecord = req.into();
 
-    utils::verify_tweet(&tweet, &user.public_key).map_err(|err| {
-        log::error!("Failed to decrypt signature: {}", err);
+    tweet.user_id = user.public_key;
+
+    utils::verify_tweet(&tweet).map_err(|err| {
+        log::error!("Failed to verify signature: {}", err);
         warp::reject::custom(Errors::Unauthorized)
     })?;
-
-    tweet.user_id = user.public_key;
 
     let tweet = tweet.create(&db).await.map_err(|err| {
         log::error!("Failed to insert tweet: {}", err);
@@ -43,7 +43,7 @@ pub async fn create(
 
     chan.send(tweet.clone()).await.map_err(|err| {
         log::error!("Failed to send tweet through chan: {}", err);
-        Errors::ChannelSend(err)
+        warp::reject::custom(Errors::ChannelSend(err))
     })?;
 
     Ok(with_status(TweetSchema::from(tweet), StatusCode::CREATED))
