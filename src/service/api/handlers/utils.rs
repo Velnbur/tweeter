@@ -3,13 +3,11 @@ use ecdsa::signature::Verifier;
 use elliptic_curve::rand_core::OsRng;
 use k256::ecdsa::{Signature, SigningKey, VerifyingKey};
 
-use std::str::FromStr;
-
 #[derive(Clone, PartialEq, Debug)]
 pub struct PubKey(pub String);
 
 impl Credentials for PubKey {
-    const SCHEME: &'static str = "Public Key";
+    const SCHEME: &'static str = "PublicKey";
 
     fn decode(value: &axum::http::HeaderValue) -> Option<Self> {
         if value.is_empty() {
@@ -19,7 +17,7 @@ impl Credentials for PubKey {
             Ok(v) => v,
             Err(_) => return None,
         };
-        Some(Self(String::from(inner)))
+        Some(Self(String::from(&inner[Self::SCHEME.len() + 1..])))
     }
 
     fn encode(&self) -> axum::http::HeaderValue {
@@ -58,7 +56,8 @@ pub fn verify_signature(msg: &String, sign: &String, pub_key: &String) -> Result
     )
     .map_err(VerifyError::VerifyKeyError)?;
 
-    let sign = Signature::from_str(sign.as_str()).map_err(VerifyError::VerifyingError)?;
+    let sign = Signature::from_der(&base64::decode(sign).map_err(VerifyError::DecodeError)?)
+        .map_err(VerifyError::VerifyingError)?;
 
     key.verify(msg.as_bytes(), &sign)
         .map_err(VerifyError::VerifyingError)
@@ -97,7 +96,7 @@ mod test {
         let msg = "hello, world";
         let sign: Signature = sign_key.sign(msg.as_bytes());
 
-        verify_signature(&msg.to_string(), &sign.to_string(), &pub_key).unwrap();
+        verify_signature(&msg.to_string(), &base64::encode(sign.to_der()), &pub_key).unwrap();
     }
 
     #[test]
@@ -129,7 +128,7 @@ mod test {
             description: description.to_string(),
             timestamp,
             user_id: pub_key.clone(),
-            signature: sign.to_string(),
+            signature: base64::encode(sign.to_der()),
             hash: None,
             prev_id: None,
         };
