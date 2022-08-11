@@ -9,8 +9,8 @@ edition = "2021"
 # Base
 ## Async runtime
 tokio = { version = "1", features = ["full"] }
-## Web framework
-warp = "0.3"
+## Web engine
+axum = { version = "0.5.15", features = ["headers"] }
 
 # For error creation
 thiserror = "1.0.31"

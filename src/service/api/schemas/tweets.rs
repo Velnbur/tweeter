@@ -1,12 +1,8 @@
 use serde::{Deserialize, Serialize};
-use warp::hyper::header::CONTENT_TYPE;
-use warp::hyper::{http, Body, StatusCode};
-use warp::Reply;
 
 use super::key::Key;
 use super::relation::Relation;
 use super::resource_type::ResourceType;
-use super::JSON_CONTENT_TYPE;
 use crate::records;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -121,25 +117,5 @@ impl From<Vec<records::tweets::Tweet>> for TweetList {
         Self {
             data: tasks.into_iter().map(|raw| TweetData::from(raw)).collect(),
         }
-    }
-}
-
-impl Reply for Tweet {
-    fn into_response(self) -> warp::reply::Response {
-        http::Response::builder()
-            .status(StatusCode::OK)
-            .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
-            .body(Body::from(serde_json::to_string(&self).unwrap()))
-            .unwrap()
-    }
-}
-
-impl Reply for TweetList {
-    fn into_response(self) -> warp::reply::Response {
-        http::Response::builder()
-            .status(StatusCode::OK)
-            .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
-            .body(Body::from(serde_json::to_string(&self).unwrap()))
-            .unwrap()
     }
 }

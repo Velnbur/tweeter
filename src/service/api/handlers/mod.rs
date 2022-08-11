@@ -1,6 +1,4 @@
-pub mod rejection;
-pub(super) mod tweets;
-pub(super) mod users;
-
-mod schemas;
-mod utils;
+pub mod auth;
+pub mod errors;
+pub mod tweets;
+pub mod utils;
