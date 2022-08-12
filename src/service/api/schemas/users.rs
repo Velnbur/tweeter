@@ -20,19 +20,10 @@ pub struct CreateUser {
     pub data: CreateUserData,
 }
 
-impl Into<records::users::User> for CreateUser {
-    fn into(self) -> records::users::User {
-        records::users::User {
-            public_key: "".to_string(),
-            username: self.data.attributes.username,
-            image_url: None,
-        }
-    }
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserAttributes {
     pub username: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub image_url: Option<String>,
 }
 
@@ -46,6 +37,16 @@ pub struct UserData {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
     pub data: UserData,
+}
+
+impl Into<records::users::User> for CreateUser {
+    fn into(self) -> records::users::User {
+        records::users::User {
+            public_key: "".to_string(),
+            username: self.data.attributes.username,
+            image_url: None,
+        }
+    }
 }
 
 impl From<records::users::User> for UserData {

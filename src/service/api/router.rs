@@ -41,5 +41,10 @@ fn users(cfg: &Config) -> Router {
             "/api/users/:pub_key",
             get(handlers::users::by_pub_key::handler),
         )
+        .route(
+            "/api/users/image/upload",
+            post(handlers::users::upload_image::handler),
+        )
         .layer(Extension(cfg.db.clone()))
+        .layer(Extension(cfg.storage.clone()))
 }

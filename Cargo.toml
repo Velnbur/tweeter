@@ -10,7 +10,7 @@ edition = "2021"
 ## Async runtime
 tokio = { version = "1", features = ["full"] }
 ## Web engine
-axum = { version = "0.5.15", features = ["headers"] }
+axum = { version = "0.5.15", features = ["headers", "multipart"] }
 
 # For error creation
 thiserror = "1.0.31"
@@ -47,3 +47,6 @@ elliptic-curve = "0.12.3"
 rand = "0.8.5"
 bs58 = "0.4.0"
 sha3 = "0.10.2"
+
+# storage for images
+rust-s3 = "0.32.3"

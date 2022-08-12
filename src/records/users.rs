@@ -53,8 +53,23 @@ impl User {
             None => return Ok(None),
         };
 
-        log::debug!("Row: {:?}", row);
         Ok(Some(Self::from(row)))
+    }
+
+    pub async fn update(self, db: &Pool) -> Result<Self, Errors> {
+        let con = db.get().await?;
+
+        let (query, values) = Query::update()
+            .table(Users::Table)
+            .values(vec![(Users::ImageURL, self.image_url.into())])
+            .and_where(Expr::col(Users::PublicKey).eq(self.public_key))
+            .returning_all()
+            .build(PostgresQueryBuilder);
+
+        let rows = con.query(query.as_str(), &values.as_params()).await?;
+
+        let row = rows.get(0).unwrap();
+        Ok(Self::from(row))
     }
 }
 

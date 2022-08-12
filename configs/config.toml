@@ -6,3 +6,9 @@ url = "postgresql://test:test@localhost:5432/test"
 
 [logger]
 level = "debug"
+
+[storage]
+endpoint = "http://localhost:9000"
+bucket = "profile-images"
+access_key = "miniominio"
+secret_key = "secretsecret"

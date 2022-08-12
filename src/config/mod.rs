@@ -2,6 +2,7 @@ mod db;
 mod logger;
 mod raw;
 mod server;
+mod storage;
 
 use std::fs;
 use std::net::SocketAddrV4;
@@ -11,6 +12,7 @@ use crate::db::Pool;
 pub struct Config {
     pub db: Pool,
     pub server: SocketAddrV4,
+    pub storage: s3::Bucket,
 }
 
 impl Config {

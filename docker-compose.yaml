@@ -23,6 +23,20 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
 
+  storage:
+    image: minio/minio:RELEASE.2019-01-31T00-31-19Z
+    restart: unless-stopped
+    entrypoint: "sh"
+    command: -c "mkdir -p /data/tfstate && minio server /data"
+    environment:
+      - MINIO_ACCESS_KEY=miniominio
+      - MINIO_SECRET_KEY=secretsecret
+      - MINIO_BROWSER=on
+    volumes:
+      - storage-data:/data
+    ports:
+      - "9000:9000"
 
 volumes:
   db-data: {}
+  storage-data: {}

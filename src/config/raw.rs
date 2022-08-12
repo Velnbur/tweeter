@@ -1,16 +1,14 @@
 use crate::config::Config;
 use serde::Deserialize;
 
-use crate::config::db::DB;
-use crate::config::server::Server;
-
-use super::logger::Logger;
+use super::{db::DB, logger::Logger, server::Server, storage::Storage};
 
 #[derive(Deserialize)]
 pub(super) struct Raw {
     pub server: Server,
     pub db: DB,
     pub logger: Logger,
+    pub storage: Storage,
 }
 
 impl Into<Config> for Raw {
@@ -20,6 +18,7 @@ impl Into<Config> for Raw {
         Config {
             server: self.server.into(),
             db: self.db.into(),
+            storage: self.storage.into(),
         }
     }
 }
