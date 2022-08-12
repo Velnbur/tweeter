@@ -1,29 +1,8 @@
-use axum::headers::authorization::Credentials;
+pub mod craber;
+
 use ecdsa::signature::Verifier;
 use elliptic_curve::rand_core::OsRng;
 use k256::ecdsa::{Signature, SigningKey, VerifyingKey};
-
-#[derive(Clone, PartialEq, Debug)]
-pub struct PubKey(pub String);
-
-impl Credentials for PubKey {
-    const SCHEME: &'static str = "PublicKey";
-
-    fn decode(value: &axum::http::HeaderValue) -> Option<Self> {
-        if value.is_empty() {
-            return None;
-        }
-        let inner = match value.to_str() {
-            Ok(v) => v,
-            Err(_) => return None,
-        };
-        Some(Self(String::from(&inner[Self::SCHEME.len() + 1..])))
-    }
-
-    fn encode(&self) -> axum::http::HeaderValue {
-        todo!()
-    }
-}
 
 pub fn generate_keys() -> (String, String) {
     let keys = SigningKey::random(&mut OsRng);

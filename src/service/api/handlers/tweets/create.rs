@@ -1,4 +1,4 @@
-use axum::{headers::Authorization, response::IntoResponse, Extension, Json, TypedHeader};
+use axum::{response::IntoResponse, Extension, Json};
 use thiserror::Error;
 use tokio::sync::mpsc::Sender;
 
@@ -6,19 +6,19 @@ use crate::{
     db::Pool,
     records::{tweets::Tweet as TweetRecord, users::User as UserRecord},
     service::api::{
-        auth::{self, PubKey},
-        handlers::errors::ErrorResponse,
+        auth::{self, craber::Claims},
+        errors::ErrorResponse,
         schemas::tweets::{CreateTweet as CreateTweetSchema, Tweet as TweetSchema},
     },
 };
 
 pub async fn create(
-    TypedHeader(pub_key): TypedHeader<Authorization<PubKey>>,
+    claims: Claims,
     Json(body): Json<CreateTweetSchema>,
     Extension(db): Extension<Pool>,
     Extension(chan): Extension<Sender<TweetRecord>>,
 ) -> Result<impl IntoResponse, CreateError> {
-    let user = UserRecord::find((pub_key.0).0, &db)
+    let user = UserRecord::find(claims.pub_key, &db)
         .await
         .map_err(|err| {
             log::error!("Failed to get user: {}", err);

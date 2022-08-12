@@ -6,7 +6,7 @@ use crate::{
     records::{self, users::User as UserRecord},
     service::api::{
         auth,
-        handlers::errors::ErrorResponse,
+        errors::ErrorResponse,
         schemas::{auth_keys::AuthKeys, users::CreateUser as CreateUserSchema},
     },
 };
