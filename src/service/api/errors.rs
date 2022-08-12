@@ -8,6 +8,7 @@ pub enum ErrorResponse {
     Unauthorized,
     Forbidden(String),
     Conflict(String),
+    NotFound(String),
 }
 
 impl IntoResponse for ErrorResponse {
@@ -27,6 +28,9 @@ impl IntoResponse for ErrorResponse {
             }
             Self::Forbidden(s) => {
                 Error::new(StatusCode::FORBIDDEN, "Forbidden".to_string(), Some(s))
+            }
+            Self::NotFound(s) => {
+                Error::new(StatusCode::NOT_FOUND, "Not Found".to_string(), Some(s))
             }
         };
         Json(res).into_response()

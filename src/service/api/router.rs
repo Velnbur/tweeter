@@ -1,4 +1,7 @@
-use axum::{routing::post, Extension, Router};
+use axum::{
+    routing::{get, post},
+    Extension, Router,
+};
 use tokio::sync::mpsc::Sender;
 
 use crate::{config::Config, records::tweets::Tweet};
@@ -21,6 +24,7 @@ fn auth(cfg: &Config) -> Router {
 fn tweets(cfg: &Config, sender: &Sender<Tweet>) -> Router {
     Router::new()
         .route("/api/tweets", post(handlers::tweets::create::create))
+        .route("/api/tweets/:i64", get(handlers::tweets::by_id::get_by_id))
         .layer(Extension(cfg.db.clone()))
         .layer(Extension(sender.clone()))
 }
