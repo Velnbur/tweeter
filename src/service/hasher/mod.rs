@@ -23,13 +23,14 @@ impl Hasher {
     pub async fn start(&mut self) {
         loop {
             let mut tweet = self.chan.recv().await.unwrap();
-            let last_hash = match self.last.clone() {
+            let (last_hash, last_id) = match self.last.clone() {
                 Some(l) => {
                     tweet.prev_id = Some(l.id);
-                    l.hash.unwrap()
+                    (l.hash.unwrap(), Some(l.id))
                 }
-                None => NULL_HASH.to_string(),
+                None => (NULL_HASH.to_string(), None),
             };
+            tweet.prev_id = last_id;
 
             Self::hash_tweet(&mut tweet, &last_hash);
 
