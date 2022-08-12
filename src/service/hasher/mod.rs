@@ -58,6 +58,6 @@ impl Hasher {
 
         hasher.update(last_hash.as_bytes());
 
-        tweet.hash = Some(base64::encode(hasher.finalize()));
+        tweet.hash = Some(bs58::encode(hasher.finalize()).into_string());
     }
 }

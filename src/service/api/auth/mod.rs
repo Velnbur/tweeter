@@ -8,8 +8,8 @@ pub fn generate_keys() -> (String, String) {
     let keys = SigningKey::random(&mut OsRng);
 
     (
-        base64::encode(keys.to_bytes()),
-        base64::encode(keys.verifying_key().to_bytes()),
+        bs58::encode(keys.to_bytes()).into_string(),
+        bs58::encode(keys.verifying_key().to_bytes()).into_string(),
     )
 }
 
@@ -20,7 +20,7 @@ use crate::records::tweets::Tweet;
 #[derive(Error, Debug)]
 pub enum VerifyError {
     #[error("failed to decode: {0}")]
-    DecodeError(#[from] base64::DecodeError),
+    DecodeError(#[from] bs58::decode::Error),
     #[error("failed to create verifying key: {0}")]
     VerifyKeyError(ecdsa::Error),
     #[error("failed to verify: {0}")]
@@ -29,14 +29,19 @@ pub enum VerifyError {
 
 pub fn verify_signature(msg: &String, sign: &String, pub_key: &String) -> Result<(), VerifyError> {
     let key = VerifyingKey::from_sec1_bytes(
-        base64::decode(pub_key)
+        bs58::decode(pub_key)
+            .into_vec()
             .map_err(VerifyError::DecodeError)?
             .as_slice(),
     )
     .map_err(VerifyError::VerifyKeyError)?;
 
-    let sign = Signature::from_der(&base64::decode(sign).map_err(VerifyError::DecodeError)?)
-        .map_err(VerifyError::VerifyingError)?;
+    let sign = Signature::from_der(
+        &bs58::decode(sign)
+            .into_vec()
+            .map_err(VerifyError::DecodeError)?,
+    )
+    .map_err(VerifyError::VerifyingError)?;
 
     key.verify(msg.as_bytes(), &sign)
         .map_err(VerifyError::VerifyingError)
@@ -68,12 +73,17 @@ mod test {
         let (priv_key, pub_key) = generate_keys();
 
         let sign_key =
-            SigningKey::from_bytes(base64::decode(priv_key).unwrap().as_slice()).unwrap();
+            SigningKey::from_bytes(bs58::decode(priv_key).into_vec().unwrap().as_slice()).unwrap();
 
         let msg = "hello, world";
         let sign: Signature = sign_key.sign(msg.as_bytes());
 
-        verify_signature(&msg.to_string(), &base64::encode(sign.to_der()), &pub_key).unwrap();
+        verify_signature(
+            &msg.to_string(),
+            &bs58::encode(sign.to_der()).into_string(),
+            &pub_key,
+        )
+        .unwrap();
     }
 
     #[test]
@@ -81,7 +91,7 @@ mod test {
         let (priv_key, pub_key) = generate_keys();
 
         let sign_key =
-            SigningKey::from_bytes(base64::decode(priv_key).unwrap().as_slice()).unwrap();
+            SigningKey::from_bytes(bs58::decode(priv_key).into_vec().unwrap().as_slice()).unwrap();
 
         let text = "title";
         let timestamp = 123123;
@@ -101,7 +111,7 @@ mod test {
             text: text.to_string(),
             timestamp,
             user_id: pub_key.clone(),
-            signature: base64::encode(sign.to_der()),
+            signature: bs58::encode(sign.to_der()).into_string(),
             hash: None,
             prev_id: None,
         };

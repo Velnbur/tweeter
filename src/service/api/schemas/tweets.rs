@@ -8,8 +8,8 @@ use crate::records;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TweetAttributes {
     pub text: String,
-    pub signature: String,
     pub timestamp: i32,
+    pub signature: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hash: Option<String>,
 }
