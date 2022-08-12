@@ -12,19 +12,19 @@ use crate::{
     },
 };
 
-pub async fn create(
+pub async fn handler(
     claims: Claims,
     Json(body): Json<CreateTweetSchema>,
     Extension(db): Extension<Pool>,
     Extension(chan): Extension<Sender<TweetRecord>>,
-) -> Result<impl IntoResponse, CreateError> {
+) -> Result<impl IntoResponse, Errors> {
     let user = UserRecord::find(claims.pub_key, &db)
         .await
         .map_err(|err| {
             log::error!("Failed to get user: {}", err);
-            CreateError::Database
+            Errors::Database
         })?
-        .ok_or(CreateError::UserNotFound)?;
+        .ok_or(Errors::UserNotFound)?;
 
     let mut tweet: TweetRecord = body.into();
 
@@ -32,24 +32,24 @@ pub async fn create(
 
     auth::verify_tweet(&tweet).map_err(|err| {
         log::debug!("Failed to verify signature: {err}");
-        CreateError::FailedToVerify
+        Errors::FailedToVerify
     })?;
 
     let tweet = tweet.create(&db).await.map_err(|err| {
         log::error!("Failed to insert tweet: {err}");
-        CreateError::Database
+        Errors::Database
     })?;
 
     chan.send(tweet.clone()).await.map_err(|err| {
         log::error!("Failed to send tweet: {err}");
-        CreateError::FailedToSend
+        Errors::FailedToSend
     })?;
 
     Ok(Json(TweetSchema::from(tweet)))
 }
 
 #[derive(Error, Debug)]
-pub enum CreateError {
+pub enum Errors {
     #[error("failed to verify tweet")]
     FailedToVerify,
     #[error("user not found")]
@@ -60,7 +60,7 @@ pub enum CreateError {
     FailedToSend,
 }
 
-impl IntoResponse for CreateError {
+impl IntoResponse for Errors {
     fn into_response(self) -> axum::response::Response {
         let resp = match self {
             Self::UserNotFound => ErrorResponse::Unauthorized,

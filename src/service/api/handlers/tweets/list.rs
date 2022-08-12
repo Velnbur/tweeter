@@ -7,27 +7,27 @@ use crate::{
     service::api::{errors::ErrorResponse, schemas::tweets::TweetList as TweetListSchema},
 };
 
-pub async fn list(
+pub async fn handler(
     Query(pagination): Query<Pagination>,
     Extension(pool): Extension<db::Pool>,
-) -> Result<impl IntoResponse, ListError> {
+) -> Result<impl IntoResponse, Errors> {
     let tweets = TweetRecord::select(&pool, &pagination)
         .await
         .map_err(|err| {
             log::error!("Failed to get tweets: {err}");
-            ListError::Database
+            Errors::Database
         })?;
 
     Ok(Json(TweetListSchema::from(tweets)))
 }
 
 #[derive(Error, Debug)]
-pub enum ListError {
+pub enum Errors {
     #[error("database error")]
     Database,
 }
 
-impl IntoResponse for ListError {
+impl IntoResponse for Errors {
     fn into_response(self) -> axum::response::Response {
         let resp = match self {
             Self::Database => ErrorResponse::InternalError,

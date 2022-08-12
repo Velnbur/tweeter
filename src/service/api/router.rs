@@ -19,7 +19,7 @@ fn auth(cfg: &Config) -> Router {
     Router::new()
         .route(
             "/api/auth/register",
-            post(handlers::auth::register::register),
+            post(handlers::auth::register::handler),
         )
         .layer(Extension(cfg.db.clone()))
 }
@@ -28,9 +28,9 @@ fn tweets(cfg: &Config, sender: &Sender<Tweet>) -> Router {
     Router::new()
         .route(
             "/api/tweets",
-            post(handlers::tweets::create::create).get(handlers::tweets::list::list),
+            post(handlers::tweets::create::handler).get(handlers::tweets::list::handler),
         )
-        .route("/api/tweets/:id", get(handlers::tweets::by_id::get_by_id))
+        .route("/api/tweets/:id", get(handlers::tweets::by_id::handler))
         .layer(Extension(cfg.db.clone()))
         .layer(Extension(sender.clone()))
 }
@@ -39,7 +39,7 @@ fn users(cfg: &Config) -> Router {
     Router::new()
         .route(
             "/api/users/:pub_key",
-            get(handlers::users::by_pub_key::by_pub_key),
+            get(handlers::users::by_pub_key::handler),
         )
         .layer(Extension(cfg.db.clone()))
 }

@@ -7,30 +7,30 @@ use crate::{
     service::api::{errors::ErrorResponse, schemas::users::User as UserSchema},
 };
 
-pub async fn by_pub_key(
+pub async fn handler(
     Path(pub_key): Path<String>,
     Extension(pool): Extension<db::Pool>,
-) -> Result<impl IntoResponse, ByPubKeyError> {
+) -> Result<impl IntoResponse, Errors> {
     let user = UserRecord::find(pub_key, &pool)
         .await
         .map_err(|err| {
             log::error!("Failed to get user: {err}");
-            ByPubKeyError::Database
+            Errors::Database
         })?
-        .ok_or(ByPubKeyError::UserNotFound)?;
+        .ok_or(Errors::UserNotFound)?;
 
     Ok(Json(UserSchema::from(user)))
 }
 
 #[derive(Error, Debug)]
-pub enum ByPubKeyError {
+pub enum Errors {
     #[error("user not found")]
     UserNotFound,
     #[error("databse error")]
     Database,
 }
 
-impl IntoResponse for ByPubKeyError {
+impl IntoResponse for Errors {
     fn into_response(self) -> axum::response::Response {
         let resp = match self {
             Self::UserNotFound => ErrorResponse::NotFound(self.to_string()),

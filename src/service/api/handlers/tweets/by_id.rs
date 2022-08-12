@@ -7,30 +7,30 @@ use crate::{
     service::api::{errors::ErrorResponse, schemas::tweets::Tweet as TweetSchema},
 };
 
+pub async fn handler(
+    Path(id): Path<i64>,
+    Extension(pool): Extension<db::Pool>,
+) -> Result<impl IntoResponse, Errors> {
+    let tweet = TweetRecord::find(id, &pool)
+        .await
+        .map_err(|err| {
+            log::error!("Failed to get tweet by id: {err}");
+            Errors::Database
+        })?
+        .ok_or(Errors::TweetNotFound)?;
+
+    Ok(Json(TweetSchema::from(tweet)))
+}
+
 #[derive(Error, Debug)]
-pub enum GetByIdError {
+pub enum Errors {
     #[error("tweet not found")]
     TweetNotFound,
     #[error("database error")]
     Database,
 }
 
-pub async fn get_by_id(
-    Path(id): Path<i64>,
-    Extension(pool): Extension<db::Pool>,
-) -> Result<impl IntoResponse, GetByIdError> {
-    let tweet = TweetRecord::find(id, &pool)
-        .await
-        .map_err(|err| {
-            log::error!("Failed to get tweet by id: {err}");
-            GetByIdError::Database
-        })?
-        .ok_or(GetByIdError::TweetNotFound)?;
-
-    Ok(Json(TweetSchema::from(tweet)))
-}
-
-impl IntoResponse for GetByIdError {
+impl IntoResponse for Errors {
     fn into_response(self) -> axum::response::Response {
         let resp = match self {
             Self::TweetNotFound => ErrorResponse::NotFound(self.to_string()),
