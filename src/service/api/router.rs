@@ -23,7 +23,10 @@ fn auth(cfg: &Config) -> Router {
 
 fn tweets(cfg: &Config, sender: &Sender<Tweet>) -> Router {
     Router::new()
-        .route("/api/tweets", post(handlers::tweets::create::create))
+        .route(
+            "/api/tweets",
+            post(handlers::tweets::create::create).get(handlers::tweets::list::list),
+        )
         .route("/api/tweets/:i64", get(handlers::tweets::by_id::get_by_id))
         .layer(Extension(cfg.db.clone()))
         .layer(Extension(sender.clone()))

@@ -1,6 +1,6 @@
 use sea_query::{Expr, PostgresDriver, PostgresQueryBuilder, Query};
 
-use super::{errors::Errors, tables::Tweets};
+use super::{errors::Errors, pagination::Pagination, tables::Tweets};
 use crate::db::Pool;
 use mobc_postgres::tokio_postgres;
 
@@ -69,7 +69,7 @@ impl Tweet {
         Ok(Some(Self::from(row)))
     }
 
-    pub async fn select(db: &Pool) -> Result<Vec<Self>, Errors> {
+    pub async fn select(db: &Pool, pagination: &Pagination) -> Result<Vec<Self>, Errors> {
         let con = db.get().await?;
 
         let (query, values) = Query::select()
@@ -83,6 +83,9 @@ impl Tweet {
                 Tweets::Hash,
                 Tweets::PreviousId,
             ])
+            .limit(pagination.limit)
+            .order_by(Tweets::Id, pagination.order.into())
+            .offset(pagination.number * pagination.limit)
             .build(PostgresQueryBuilder);
 
         let rows = con.query(query.as_str(), &values.as_params()).await?;
