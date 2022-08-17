@@ -15,9 +15,9 @@ use crate::{
     },
 };
 
-const MAX_IMAGE_SIZE: u64 = 1024 * 1024 * 10; // 10 MB
+use super::IMAGE_EXPR_SECS;
 
-const EXPR_SECS: u32 = 60 * 60 * 24; // one day
+const MAX_IMAGE_SIZE: u64 = 1024 * 1024 * 10; // 10 MB
 
 pub async fn handler(
     claims: Claims,
@@ -77,7 +77,7 @@ pub async fn handler(
 
     user.image_url = Some(
         storage
-            .presign_get(user.image_url.unwrap(), EXPR_SECS, None)
+            .presign_get(user.image_url.unwrap(), IMAGE_EXPR_SECS, None)
             .map_err(|err| {
                 log::error!("Failed to create presigned url: {err}");
                 Errors::StorageError(err)
