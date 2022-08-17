@@ -45,12 +45,11 @@ async fn migrate_users(pool: &PgPool) -> Result<(), sqlx::Error> {
         .col(ColumnDef::new(Users::PublicKey).text().primary_key())
         .col(
             ColumnDef::new(Users::Username)
-                .char()
-                .char_len(50)
+                .text()
                 .not_null()
                 .unique_key(),
         )
-        .col(ColumnDef::new(Users::ImageURL).char().char_len(100))
+        .col(ColumnDef::new(Users::ImageURL).text())
         .build(PostgresQueryBuilder);
 
     sqlx::query(&sql).execute(&mut con).await?;
