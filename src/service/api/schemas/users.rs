@@ -42,7 +42,7 @@ pub struct User {
 impl Into<records::users::User> for CreateUser {
     fn into(self) -> records::users::User {
         records::users::User {
-            public_key: "".to_string(),
+            public_key: String::new(),
             username: self.data.attributes.username,
             image_url: None,
         }

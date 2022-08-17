@@ -3,8 +3,9 @@ use thiserror::Error;
 use tokio::sync::mpsc::Sender;
 
 use crate::{
-    db::Pool,
-    records::{tweets::Tweet as TweetRecord, users::User as UserRecord},
+    records::{
+        errors::Errors as RecordErrors, tweets::Tweet as TweetRecord, users::User as UserRecord,
+    },
     service::api::{
         auth::{self, craber::Claims},
         errors::ErrorResponse,
@@ -15,16 +16,18 @@ use crate::{
 pub async fn handler(
     claims: Claims,
     Json(body): Json<CreateTweetSchema>,
-    Extension(db): Extension<Pool>,
+    Extension(pool): Extension<sqlx::PgPool>,
     Extension(chan): Extension<Sender<TweetRecord>>,
 ) -> Result<impl IntoResponse, Errors> {
-    let user = UserRecord::find(claims.pub_key, &db)
+    let user = UserRecord::find(claims.pub_key, &pool)
         .await
-        .map_err(|err| {
-            log::error!("Failed to get user: {}", err);
-            Errors::Database
-        })?
-        .ok_or(Errors::UserNotFound)?;
+        .map_err(|err| match err {
+            RecordErrors::NotFound => Errors::UserNotFound,
+            _ => {
+                log::error!("Failed to get tweet by id: {err}");
+                Errors::Database
+            }
+        })?;
 
     let mut tweet: TweetRecord = body.into();
 
@@ -35,7 +38,7 @@ pub async fn handler(
         Errors::FailedToVerify
     })?;
 
-    let tweet = tweet.create(&db).await.map_err(|err| {
+    let tweet = tweet.create(&pool).await.map_err(|err| {
         log::error!("Failed to insert tweet: {err}");
         Errors::Database
     })?;

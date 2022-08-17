@@ -9,23 +9,22 @@ pub(super) struct Storage {
     pub secret_key: String,
 }
 
-impl Into<s3::Bucket> for Storage {
-    fn into(self) -> s3::Bucket {
-        Bucket::new(
+impl Storage {
+    pub async fn parse(self) -> Result<s3::Bucket, s3::error::S3Error> {
+        Ok(Bucket::new(
             &self.bucket,
             Region::Custom {
                 region: "".into(),
                 endpoint: self.endpoint.into(),
             },
             Credentials {
-                access_key: self.access_key.into(),
-                secret_key: self.secret_key.into(),
+                access_key: Some(self.access_key),
+                secret_key: Some(self.secret_key),
                 security_token: None,
                 session_token: None,
                 expiration: None,
             },
-        )
-        .expect("failed to parse storage config")
-        .with_path_style()
+        )?
+        .with_path_style())
     }
 }

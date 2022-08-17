@@ -113,7 +113,7 @@ mod test {
             user_id: pub_key.clone(),
             signature: bs58::encode(sign.to_der()).into_string(),
             hash: None,
-            prev_id: None,
+            previous_id: None,
         };
 
         verify_tweet(&tweet).unwrap();

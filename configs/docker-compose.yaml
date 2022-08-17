@@ -27,7 +27,7 @@ services:
     image: minio/minio:RELEASE.2019-01-31T00-31-19Z
     restart: unless-stopped
     entrypoint: "sh"
-    command: -c "mkdir -p /data/tfstate && minio server /data"
+    command: -c "mkdir -p /data/profile-images && minio server /data"
     environment:
       - MINIO_ACCESS_KEY=miniominio
       - MINIO_SECRET_KEY=secretsecret

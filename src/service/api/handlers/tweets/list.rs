@@ -2,14 +2,13 @@ use axum::{extract::Query, response::IntoResponse, Extension, Json};
 use thiserror::Error;
 
 use crate::{
-    db,
     records::{pagination::Pagination, tweets::Tweet as TweetRecord},
     service::api::{errors::ErrorResponse, schemas::tweets::TweetList as TweetListSchema},
 };
 
 pub async fn handler(
     Query(pagination): Query<Pagination>,
-    Extension(pool): Extension<db::Pool>,
+    Extension(pool): Extension<sqlx::PgPool>,
 ) -> Result<impl IntoResponse, Errors> {
     let tweets = TweetRecord::select(&pool, &pagination)
         .await

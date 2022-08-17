@@ -68,14 +68,14 @@ impl Into<records::tweets::Tweet> for CreateTweet {
             timestamp: self.data.attributes.timestamp,
             hash: None,
             user_id: String::new(),
-            prev_id: None,
+            previous_id: None,
         }
     }
 }
 
 impl From<records::tweets::Tweet> for TweetData {
     fn from(tweet: records::tweets::Tweet) -> Self {
-        let previous = match tweet.prev_id {
+        let previous = match tweet.previous_id {
             None => None,
             Some(id) => Some(Relation {
                 data: Key::new(id.to_string(), ResourceType::Tweet),

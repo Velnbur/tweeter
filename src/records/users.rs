@@ -1,12 +1,11 @@
-use mobc_postgres::tokio_postgres::error::SqlState;
-use mobc_postgres::tokio_postgres::Row;
-use sea_query::{Expr, PostgresDriver, PostgresQueryBuilder, Query};
-
-use crate::db::Pool;
-use crate::records::tables::Users;
+use sea_query::{Expr, PostgresQueryBuilder, Query};
+use sqlx::postgres::PgDatabaseError;
 
 use super::errors::Errors;
+use super::sea_query_driver_postgres::bind_query_as;
+use crate::records::tables::Users;
 
+#[derive(sqlx::FromRow, Debug)]
 pub struct User {
     pub public_key: String,
     pub username: String,
@@ -14,31 +13,30 @@ pub struct User {
 }
 
 impl User {
-    pub async fn create(self, db: &Pool) -> Result<Self, Errors> {
-        let con = db.get().await?;
-
+    pub async fn create(self, pool: &sqlx::PgPool) -> Result<Self, Errors> {
         let (query, values) = Query::insert()
             .into_table(Users::Table)
             .columns([Users::PublicKey, Users::Username])
-            .values_panic(vec![self.public_key.into(), self.username.into()])
             .returning_all()
+            .values(vec![self.public_key.into(), self.username.into()])
+            .map_err(Errors::Query)?
             .build(PostgresQueryBuilder);
 
-        let rows = con
-            .query(query.as_str(), &values.as_params())
+        let row = bind_query_as(sqlx::query_as::<_, User>(&query), &values)
+            .fetch_one(pool)
             .await
-            .map_err(|err| match err.code().unwrap() {
-                &SqlState::UNIQUE_VIOLATION => Errors::InvalidUsername,
-                _ => Errors::QueryError(err),
+            .map_err(|err| match err {
+                sqlx::Error::Database(err) => match err.downcast_ref::<PgDatabaseError>().code() {
+                    "23505" => Errors::InvalidUsername,
+                    &_ => Errors::Database(sqlx::Error::Database(err)),
+                },
+                _ => Errors::Database(err),
             })?;
 
-        let row = rows.get(0).unwrap(); // TODO: Something went totally wrong
-        Ok(Self::from(row))
+        Ok(row)
     }
 
-    pub async fn find(pub_key: String, db: &Pool) -> Result<Option<Self>, Errors> {
-        let con = db.get().await?;
-
+    pub async fn find(pub_key: String, pool: &sqlx::PgPool) -> Result<Self, Errors> {
         let (query, values) = Query::select()
             .from(Users::Table)
             .columns([Users::PublicKey, Users::Username, Users::ImageURL])
@@ -46,19 +44,18 @@ impl User {
             .and_where(Expr::col(Users::PublicKey).eq(pub_key))
             .build(PostgresQueryBuilder);
 
-        let rows = con.query(query.as_str(), &values.as_params()).await?;
+        let row = bind_query_as(sqlx::query_as::<_, User>(&query), &values)
+            .fetch_one(pool)
+            .await
+            .map_err(|err| match err {
+                sqlx::Error::RowNotFound => Errors::NotFound,
+                _ => Errors::Database(err),
+            })?;
 
-        let row = match rows.get(0) {
-            Some(val) => val,
-            None => return Ok(None),
-        };
-
-        Ok(Some(Self::from(row)))
+        Ok(row)
     }
 
-    pub async fn update(self, db: &Pool) -> Result<Self, Errors> {
-        let con = db.get().await?;
-
+    pub async fn update(self, pool: &sqlx::PgPool) -> Result<Self, Errors> {
         let (query, values) = Query::update()
             .table(Users::Table)
             .values(vec![(Users::ImageURL, self.image_url.into())])
@@ -66,19 +63,11 @@ impl User {
             .returning_all()
             .build(PostgresQueryBuilder);
 
-        let rows = con.query(query.as_str(), &values.as_params()).await?;
+        let row = bind_query_as(sqlx::query_as::<_, User>(&query), &values)
+            .fetch_one(pool)
+            .await
+            .map_err(Errors::Database)?;
 
-        let row = rows.get(0).unwrap();
-        Ok(Self::from(row))
-    }
-}
-
-impl From<&Row> for User {
-    fn from(r: &Row) -> Self {
-        Self {
-            public_key: r.get(0),
-            username: r.get(1),
-            image_url: r.get(2),
-        }
+        Ok(row)
     }
 }

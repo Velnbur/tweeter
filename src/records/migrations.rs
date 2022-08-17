@@ -1,16 +1,15 @@
-use crate::db::{Connection, Pool};
 use crate::records::tables::{Tweets, Users};
-use mobc_postgres::tokio_postgres;
 use sea_query::{ColumnDef, ForeignKey, ForeignKeyAction, PostgresQueryBuilder, Table};
+use sqlx::PgPool;
 
-pub async fn migrate(db: &Pool) -> Result<(), mobc::Error<tokio_postgres::Error>> {
-    let con = db.get().await?;
-    migrate_users(&con).await?;
-    migrate_tweets(&con).await?;
+pub async fn migrate(pool: &PgPool) -> Result<(), sqlx::Error> {
+    migrate_users(&pool).await?;
+    migrate_tweets(&pool).await?;
     Ok(())
 }
 
-async fn migrate_tweets(db: &Connection) -> Result<(), tokio_postgres::Error> {
+async fn migrate_tweets(pool: &PgPool) -> Result<(), sqlx::Error> {
+    let mut con = pool.acquire().await.map_err(sqlx::Error::from)?;
     let sql = Table::create()
         .table(Tweets::Table)
         .if_not_exists()
@@ -34,11 +33,12 @@ async fn migrate_tweets(db: &Connection) -> Result<(), tokio_postgres::Error> {
         )
         .build(PostgresQueryBuilder);
 
-    db.batch_execute(&sql).await?;
+    sqlx::query(&sql).execute(&mut con).await?;
     Ok(())
 }
 
-async fn migrate_users(db: &Connection) -> Result<(), tokio_postgres::Error> {
+async fn migrate_users(pool: &PgPool) -> Result<(), sqlx::Error> {
+    let mut con = pool.acquire().await.map_err(sqlx::Error::from)?;
     let sql = Table::create()
         .table(Users::Table)
         .if_not_exists()
@@ -53,6 +53,6 @@ async fn migrate_users(db: &Connection) -> Result<(), tokio_postgres::Error> {
         .col(ColumnDef::new(Users::ImageURL).char().char_len(100))
         .build(PostgresQueryBuilder);
 
-    db.batch_execute(&sql).await?;
+    sqlx::query(&sql).execute(&mut con).await?;
     Ok(())
 }

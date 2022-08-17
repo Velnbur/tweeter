@@ -1,6 +1,5 @@
 mod cli;
 mod config;
-mod db;
 mod records;
 mod service;
 

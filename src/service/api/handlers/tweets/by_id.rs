@@ -2,22 +2,23 @@ use axum::{extract::Path, response::IntoResponse, Extension, Json};
 use thiserror::Error;
 
 use crate::{
-    db,
-    records::tweets::Tweet as TweetRecord,
+    records::{errors::Errors as RecordErrors, tweets::Tweet as TweetRecord},
     service::api::{errors::ErrorResponse, schemas::tweets::Tweet as TweetSchema},
 };
 
 pub async fn handler(
     Path(id): Path<i64>,
-    Extension(pool): Extension<db::Pool>,
+    Extension(pool): Extension<sqlx::PgPool>,
 ) -> Result<impl IntoResponse, Errors> {
     let tweet = TweetRecord::find(id, &pool)
         .await
-        .map_err(|err| {
-            log::error!("Failed to get tweet by id: {err}");
-            Errors::Database
-        })?
-        .ok_or(Errors::TweetNotFound)?;
+        .map_err(|err| match err {
+            RecordErrors::NotFound => Errors::TweetNotFound,
+            _ => {
+                log::error!("Failed to get tweet by id: {err}");
+                Errors::Database
+            }
+        })?;
 
     Ok(Json(TweetSchema::from(tweet)))
 }

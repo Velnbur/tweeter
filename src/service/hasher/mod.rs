@@ -1,10 +1,10 @@
-use crate::db::Pool;
 use crate::records::tweets::Tweet;
 use sha3::{Digest, Sha3_256};
+use sqlx::PgPool;
 use tokio::sync::mpsc::Receiver;
 
 pub struct Hasher {
-    db: Pool,
+    pool: PgPool,
     chan: Receiver<Tweet>,
     last: Option<Tweet>,
 }
@@ -12,9 +12,9 @@ pub struct Hasher {
 const NULL_HASH: &'static str = "000000000000000000000000000";
 
 impl Hasher {
-    pub fn new(receiver: Receiver<Tweet>, db: Pool) -> Self {
+    pub fn new(receiver: Receiver<Tweet>, pool: PgPool) -> Self {
         Self {
-            db,
+            pool,
             chan: receiver,
             last: None,
         }
@@ -25,18 +25,18 @@ impl Hasher {
             let mut tweet = self.chan.recv().await.unwrap();
             let (last_hash, last_id) = match self.last.clone() {
                 Some(l) => {
-                    tweet.prev_id = Some(l.id);
+                    tweet.previous_id = Some(l.id);
                     (l.hash.unwrap(), Some(l.id))
                 }
                 None => (NULL_HASH.to_string(), None),
             };
-            tweet.prev_id = last_id;
+            tweet.previous_id = last_id;
 
             Self::hash_tweet(&mut tweet, &last_hash);
 
-            self.last = match tweet.update(&self.db).await {
+            self.last = match tweet.update(&self.pool).await {
                 Err(err) => {
-                    log::error!("Failed to hash tweet with error: {}", err);
+                    log::error!("Failed to hash tweet with error: {err}");
                     continue;
                 }
                 Ok(tweet) => {

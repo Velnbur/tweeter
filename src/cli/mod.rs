@@ -17,7 +17,9 @@ struct Args {
 pub async fn run() {
     let args = Args::parse();
 
-    let config = Config::from_file(args.config);
+    let config = Config::from_file(args.config)
+        .await
+        .expect("failed to create config");
 
     if args.migrate {
         records::migrations::migrate(&config.db)

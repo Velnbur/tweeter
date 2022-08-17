@@ -2,7 +2,6 @@ use axum::{response::IntoResponse, Extension, Json};
 use thiserror::Error;
 
 use crate::{
-    db::Pool,
     records::{self, users::User as UserRecord},
     service::api::{
         auth,
@@ -13,7 +12,7 @@ use crate::{
 
 pub async fn handler(
     Json(body): Json<CreateUserSchema>,
-    Extension(db): Extension<Pool>,
+    Extension(pool): Extension<sqlx::PgPool>,
 ) -> Result<impl IntoResponse, Errors> {
     let mut user: UserRecord = body.into();
 
@@ -21,7 +20,7 @@ pub async fn handler(
 
     user.public_key = pub_key;
 
-    let user = user.create(&db).await.map_err(|err| {
+    let user = user.create(&pool).await.map_err(|err| {
         log::error!("Failed to create user: {err}");
         Errors::Database(err)
     })?;
