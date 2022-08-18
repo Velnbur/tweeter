@@ -1,5 +1,5 @@
 [package]
-name = "rust-api-example"
+name = "tweets-backend"
 version = "0.1.0"
 edition = "2021"
 
@@ -21,8 +21,9 @@ serde_json = "1.0"
 
 # DB
 ## Query building
-sqlx = { version = "0.6", features = ["runtime-tokio-native-tls", "postgres"] }
 sea-query = { version = "^0", features = ["sqlx-postgres", "postgres"] }
+## database driver
+sqlx = { version = "0.6", features = ["runtime-tokio-native-tls", "postgres"] }
 
 # Config parsing
 toml = "0.5.9"

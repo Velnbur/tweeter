@@ -1,0 +1,46 @@
+* tweeter-backend
+~tweeter-backend~ - is an example project of creating a small http service in Rust
+programing language using modern crate's for that like.
+
+** Important to mention dependecies
+
++ [[https://docs.rs/thiserror/latest/thiserror/][thiserror]] - a small crate for creating custom errors
++ [[https://crates.io/crates/axum][axum]] - a powerful framework for creating [[https://www.techempower.com/benchmarks/#section=data-r21][fast]] async http servers
++ [[https://crates.io/crates/sqlx][sqlx]] - a universal async database driver with some handy features
++ [[https://docs.rs/sea-query/0.10.0/sea_query/][sea-query]] - a sql query builder
+
+
+*** Axum
+
+One of my most loved features in axum is an auto request parsing by using
+types that implement ~FromRequest<B>~ trait that frees you from writing
+boilerplate code like parsing url parameters from, values in the header
+and etc.
+
+For example, this is a handler for which axum will parse ~id~ from url,
+value from ~Authorization~ header, an optional query parameter and a
+will parse body as a json.
+
+#+BEGIN_SRC rust
+use serde::Deserialize;
+
+#[derive(Deserialize)]
+struct Pagination {
+    page: Option<usize>,
+    per_page: Option<usize>,
+}
+
+#[derive(Deserialize)]
+struct Body {
+    pub name: String,
+}
+
+async fn handler(
+    Path(id): Path(i32),
+    Authorization(token): Authorization<Bearer>,
+    Query(param): Query<Pagination>,
+    Json(body): Json<Body>,
+) -> Result<impl IntoResponse, impl IntoResponse> {
+    ...
+}
+#+END_SRC
