@@ -1,25 +1,45 @@
 * tweeter-backend
 ~tweeter-backend~ - is an example project of creating a small http service in Rust
-programing language using modern crate's for that like.
+programming language using modern crate's for that like.
 
-** Important to mention dependecies
+** Important to mention dependencies
 
 + [[https://docs.rs/thiserror/latest/thiserror/][thiserror]] - a small crate for creating custom errors
 + [[https://crates.io/crates/axum][axum]] - a powerful framework for creating [[https://www.techempower.com/benchmarks/#section=data-r21][fast]] async http servers
-+ [[https://crates.io/crates/sqlx][sqlx]] - a universal async database driver with some handy features
-+ [[https://docs.rs/sea-query/0.10.0/sea_query/][sea-query]] - a sql query builder
 
+*** thiserror
 
-*** Axum
+Gives an opportunity to easily declare custom error types as enums that can wrap
+other error types with custom messages.
+
+For example if you have a handler that calls three other functions that has
+three different errors, like: ~db:Error~, ~s3::Error~, ~auth:Error~, you may
+write something like this:
+
+#+BEGIN_SRC rust
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum HandlerError {
+    #[error("database failed: {0}")]
+    Database(#[from] db::Error),
+    #[error("s3 bucket failed: {0}")]
+    S3Bucket(#[from] s3::Error),
+    #[error("failed to authenticate: {0}")]
+    Auth(#[from] auth::Error),
+}
+#+END_SRC
+
+*** axum
 
 One of my most loved features in axum is an auto request parsing by using
 types that implement ~FromRequest<B>~ trait that frees you from writing
-boilerplate code like parsing url parameters from, values in the header
+boilerplate code like parsing url parameters, values in the headers
 and etc.
 
-For example, this is a handler for which axum will parse ~id~ from url,
+For example, this is a handler from which axum will parse ~id~ from url,
 value from ~Authorization~ header, an optional query parameter and a
-will parse body as a json.
+will parse body as a JSON.
 
 #+BEGIN_SRC rust
 use serde::Deserialize;
@@ -43,4 +63,66 @@ async fn handler(
 ) -> Result<impl IntoResponse, impl IntoResponse> {
     ...
 }
+#+END_SRC
+
+Another cool axum's design feature was an idea of the handler return type as
+a ~Result~ of two types that must implement ~IntoResponse~ trait that looks
+just like this:
+
+#+BEGIN_SRC rust
+pub trait IntoResponse {
+    fn into_response(self) -> Response;
+}
+#+END_SRC
+
+In most cases for /good/ response you will use embedded structures like
+~Json~ that will serialize inner structure into JSON as response body, but
+the /error/ one you may need to code a little (and you really need that).
+
+For example, lets use error from ~thiserror~ example (~StatusCode~ already
+implements ~IntoResponse~):
+
+#+BEGIN_SRC rust
+impl IntoResponse for HandlerError {
+    fn into_response(self) -> Response {
+        let code = match self {
+            Self::Auth => StatusCode::Unauthorized,
+            Self::Database | Self::S3Bucket
+                => StatusCode::InternalServerError,
+        };
+        code.into_response()
+    }
+}
+#+END_SRC
+
+That let's us to use beautiful ~?~ operator inside our handlers as it is,
+for anybody that didn't know ~?~ operator is just a shortcut for:
+
+#+BEGIN_SRC rust
+match thing {
+    Ok(value) => value,
+    Err(err) => return err
+}
+#+END_SRC
+
+So after this preparations this example of code from this:
+
+#+BEGIN_SRC rust
+let user = match auth::get_user() {
+    Ok(user) => user,
+    Err(err) => {
+        log::info!("failed to authorize: {err}");
+        return StatusCode::Unauthorized,
+    }
+};
+#+END_SRC
+
+May turn to this:
+
+#+BEGIN_SRC rust
+let user = auth::get_user()
+             .map_err(|err| {
+                 log::info("failed to authorize: {err}");
+                 HandlerError::Database(err)
+             })?;
 #+END_SRC
