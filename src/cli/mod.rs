@@ -17,14 +17,22 @@ struct Args {
 pub async fn run() {
     let args = Args::parse();
 
-    let config = Config::from_file(args.config)
-        .await
-        .expect("failed to create config");
+    let config = match Config::from_file(args.config).await {
+        Ok(cfg) => cfg,
+        Err(err) => {
+            log::error!("failed to create config: {err}");
+            return;
+        }
+    };
 
     if args.migrate {
-        records::migrations::migrate(&config.db)
-            .await
-            .expect("Failed to migrate database");
+        match records::migrations::migrate(&config.db).await {
+            Ok(_) => (),
+            Err(err) => {
+                log::error!("failed to migrate: {err}");
+                return;
+            }
+        };
         log::info!("migrations applied");
     }
 
