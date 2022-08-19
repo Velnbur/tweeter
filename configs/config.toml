@@ -5,7 +5,7 @@ port = 8080
 url = "postgresql://test:test@localhost:5432/test"
 
 [logger]
-level = "debug"
+level = "info"
 
 [storage]
 endpoint = "http://localhost:9000"

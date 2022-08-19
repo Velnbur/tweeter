@@ -101,7 +101,7 @@ for anybody that didn't know ~?~ operator is just a shortcut for:
 #+BEGIN_SRC rust
 match thing {
     Ok(value) => value,
-    Err(err) => return err
+    Err(err) => return Err(err)
 }
 #+END_SRC
 
