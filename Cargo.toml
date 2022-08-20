@@ -1,5 +1,5 @@
 [package]
-name = "tweets-backend"
+name = "tweeter-backend"
 version = "0.1.0"
 edition = "2021"
 
@@ -23,7 +23,7 @@ serde_json = "1.0"
 ## Query building
 sea-query = { version = "^0", features = ["sqlx-postgres", "postgres"] }
 ## database driver
-sqlx = { version = "0.6", features = ["runtime-tokio-native-tls", "postgres"] }
+sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "postgres"] }
 
 # Config parsing
 toml = "0.5.9"
@@ -47,4 +47,4 @@ bs58 = "0.4.0"
 sha3 = "0.10.2"
 
 # storage for images
-rust-s3 = "0.32.3"
+rust-s3 = { default-features = false, version = "0.32.3", features = [ "tokio-rustls-tls" ] }
