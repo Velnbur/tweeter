@@ -1,5 +1,4 @@
-use axum::{response::IntoResponse, Extension, Json};
-use thiserror::Error;
+use axum::{Extension, Json};
 use tokio::sync::mpsc::Sender;
 use tweeter_schemas::tweets::{CreateTweetRequest, TweetResponse};
 
@@ -18,14 +17,14 @@ pub async fn handler(
     Json(body): Json<CreateTweetRequest>,
     Extension(pool): Extension<sqlx::PgPool>,
     Extension(chan): Extension<Sender<TweetRecord>>,
-) -> Result<impl IntoResponse, Errors> {
+) -> Result<Json<TweetResponse>, ErrorResponse> {
     let user = UserRecord::find(claims.pub_key, &pool)
         .await
         .map_err(|err| match err {
-            RecordErrors::NotFound => Errors::UserNotFound,
+            RecordErrors::NotFound => ErrorResponse::Unauthorized,
             _ => {
                 log::error!("Failed to get tweet by id: {err}");
-                Errors::Database
+                ErrorResponse::InternalError
             }
         })?;
 
@@ -34,43 +33,19 @@ pub async fn handler(
     tweet.user_id = user.public_key;
 
     auth::verify_tweet(&tweet).map_err(|err| {
-        log::debug!("Failed to verify signature: {err}");
-        Errors::FailedToVerify
+        log::info!("Failed to verify signature: {err}");
+        ErrorResponse::Forbidden(err.to_string())
     })?;
 
     let tweet = tweet.create(&pool).await.map_err(|err| {
         log::error!("Failed to insert tweet: {err}");
-        Errors::Database
+        ErrorResponse::InternalError
     })?;
 
     chan.send(tweet.clone()).await.map_err(|err| {
         log::error!("Failed to send tweet: {err}");
-        Errors::FailedToSend
+        ErrorResponse::InternalError
     })?;
 
     Ok(Json(TweetResponse::from(tweet)))
-}
-
-#[derive(Error, Debug)]
-pub enum Errors {
-    #[error("failed to verify tweet")]
-    FailedToVerify,
-    #[error("user not found")]
-    UserNotFound,
-    #[error("database error")]
-    Database,
-    #[error("failed to send tweet to hasher")]
-    FailedToSend,
-}
-
-impl IntoResponse for Errors {
-    fn into_response(self) -> axum::response::Response {
-        let resp = match self {
-            Self::UserNotFound => ErrorResponse::Unauthorized,
-            Self::FailedToVerify => ErrorResponse::Forbidden(self.to_string()),
-            _ => ErrorResponse::InternalError,
-        };
-
-        resp.into_response()
-    }
 }

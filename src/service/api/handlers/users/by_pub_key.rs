@@ -1,5 +1,4 @@
-use axum::{extract::Path, response::IntoResponse, Extension, Json};
-use thiserror::Error;
+use axum::{extract::Path, Extension, Json};
 use tweeter_schemas::users::UserResponse;
 
 use crate::{
@@ -13,14 +12,14 @@ pub async fn handler(
     Path(pub_key): Path<String>,
     Extension(pool): Extension<sqlx::PgPool>,
     Extension(storage): Extension<s3::Bucket>,
-) -> Result<impl IntoResponse, Errors> {
+) -> Result<Json<UserResponse>, ErrorResponse> {
     let mut user = UserRecord::find(pub_key, &pool)
         .await
         .map_err(|err| match err {
-            RecordErrors::NotFound => Errors::UserNotFound,
+            RecordErrors::NotFound => ErrorResponse::NotFound(err.to_string()),
             _ => {
                 log::error!("Failed to get user: {err}");
-                Errors::Database
+                ErrorResponse::InternalError
             }
         })?;
 
@@ -28,30 +27,10 @@ pub async fn handler(
         user.image_url = Some(storage.presign_get(image, IMAGE_EXPR_SECS, None).map_err(
             |err| {
                 log::error!("failed to create presigned url for image: {err}");
-                Errors::Storage
+                ErrorResponse::InternalError
             },
         )?);
     }
 
     Ok(Json(UserResponse::from(user)))
-}
-
-#[derive(Error, Debug)]
-pub enum Errors {
-    #[error("user not found")]
-    UserNotFound,
-    #[error("storage error")]
-    Storage,
-    #[error("databse error")]
-    Database,
-}
-
-impl IntoResponse for Errors {
-    fn into_response(self) -> axum::response::Response {
-        let resp = match self {
-            Self::UserNotFound => ErrorResponse::NotFound(self.to_string()),
-            Self::Database | Self::Storage => ErrorResponse::InternalError,
-        };
-        resp.into_response()
-    }
 }

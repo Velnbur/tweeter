@@ -1,12 +1,10 @@
 use std::path::Path;
 
 use axum::{
-    extract::{multipart, ContentLengthLimit, Multipart},
+    extract::{ContentLengthLimit, Multipart},
     http::StatusCode,
-    response::IntoResponse,
     Extension, Json,
 };
-use thiserror::Error;
 use tweeter_schemas::users::UserResponse;
 
 use crate::{
@@ -18,19 +16,23 @@ use super::IMAGE_EXPR_SECS;
 
 const MAX_IMAGE_SIZE: u64 = 1024 * 1024 * 10; // 10 MB
 
+const NO_IMAGE_FIELD: &str = "no 'image' field";
+const NO_FILE_NAME: &str = "failed to get filename";
+const NO_MEDIA_TYPE: &str = "failed to get media type";
+
 pub async fn handler(
     claims: Claims,
     ContentLengthLimit(mut image): ContentLengthLimit<Multipart, MAX_IMAGE_SIZE>,
     Extension(pool): Extension<sqlx::PgPool>,
     Extension(storage): Extension<s3::Bucket>,
-) -> Result<impl IntoResponse, Errors> {
+) -> Result<Json<UserResponse>, ErrorResponse> {
     let mut user = UserRecord::find(claims.pub_key, &pool)
         .await
         .map_err(|err| match err {
-            RecordErrors::NotFound => Errors::UserNotFound,
+            RecordErrors::NotFound => ErrorResponse::Unauthorized,
             _ => {
                 log::error!("Failed to find user: {err}");
-                Errors::Database
+                ErrorResponse::InternalError
             }
         })?;
 
@@ -38,19 +40,22 @@ pub async fn handler(
         .next_field()
         .await
         .map_err(|err| {
-            log::debug!("Failed to get multipart field");
-            Errors::MultipartError(err)
+            log::info!("Failed to get multipart field");
+            ErrorResponse::BadRequest(err.to_string())
         })?
-        .ok_or(Errors::NoMutipartField)?;
+        .ok_or(ErrorResponse::BadRequest(NO_IMAGE_FIELD.to_string()))?;
 
-    let file_name = field.file_name().ok_or(Errors::FileNameError)?.to_string();
+    let file_name = field
+        .file_name()
+        .ok_or(ErrorResponse::BadRequest(NO_FILE_NAME.to_string()))?
+        .to_string();
     let content_type = field
         .content_type()
-        .ok_or(Errors::ContentTypeError)?
+        .ok_or(ErrorResponse::BadRequest(NO_MEDIA_TYPE.to_string()))?
         .to_string();
     let content = field.bytes().await.map_err(|err| {
-        log::debug!("failed to get form content: {err}");
-        Errors::MultipartError(err)
+        log::info!("failed to get form content: {err}");
+        ErrorResponse::InternalError
     })?;
 
     let file_name = create_file_name(&file_name, &user.public_key);
@@ -60,18 +65,19 @@ pub async fn handler(
         .await
         .map_err(|err| {
             log::error!("Failed to upload image to storage: {err}");
-            Errors::StorageError(err)
+            ErrorResponse::InternalError
         })?;
 
     if data.status_code() != StatusCode::OK.as_u16() {
-        return Err(Errors::StorageBadRequest);
+        log::info!("request to s3 bucket failed");
+        return Err(ErrorResponse::InternalError);
     }
 
     user.image_url = Some(file_name);
 
     let mut user = user.update(&pool).await.map_err(|err| {
         log::error!("failed to update user's image: {err}");
-        Errors::Database
+        ErrorResponse::InternalError
     })?;
 
     user.image_url = Some(
@@ -79,7 +85,7 @@ pub async fn handler(
             .presign_get(user.image_url.unwrap(), IMAGE_EXPR_SECS, None)
             .map_err(|err| {
                 log::error!("Failed to create presigned url: {err}");
-                Errors::StorageError(err)
+                ErrorResponse::InternalError
             })?,
     );
 
@@ -94,45 +100,10 @@ fn create_file_name(orig: &String, pub_key: &String) -> String {
 
     if let Some(ext) = Path::new(orig).extension() {
         if let Some(ext) = ext.to_str() {
+            res.push('.');
             res.push_str(ext);
         }
     }
 
     res
-}
-
-#[derive(Error, Debug)]
-pub enum Errors {
-    #[error("no such user")]
-    UserNotFound,
-    #[error("failed to get file name")]
-    FileNameError,
-    #[error("failed to get content type")]
-    ContentTypeError,
-    #[error("no multipart filed")]
-    NoMutipartField,
-    #[error("failed to parse multipart form data")]
-    MultipartError(#[from] multipart::MultipartError),
-    #[error("database error")]
-    Database,
-    #[error("failed to upload image to storage")]
-    StorageError(#[from] s3::error::S3Error),
-    #[error("bad request to storage")]
-    StorageBadRequest,
-}
-
-impl IntoResponse for Errors {
-    fn into_response(self) -> axum::response::Response {
-        let resp = match self {
-            Self::UserNotFound => ErrorResponse::Unauthorized,
-            Self::MultipartError(err) => ErrorResponse::BadRequest(err.to_string()),
-            Self::NoMutipartField | Self::ContentTypeError | Self::FileNameError => {
-                ErrorResponse::BadRequest(self.to_string())
-            }
-            Self::Database => ErrorResponse::InternalError,
-            Self::StorageError(_) => ErrorResponse::InternalError,
-            Self::StorageBadRequest => ErrorResponse::InternalError,
-        };
-        resp.into_response()
-    }
 }
