@@ -48,3 +48,6 @@ sha3 = "0.10.2"
 
 # storage for images
 rust-s3 = { default-features = false, version = "0.32.3", features = [ "tokio-rustls-tls" ] }
+
+# Internal dependecies
+tweeter-schemas = { path = "../tweeter-schemas", version = "0.1" }

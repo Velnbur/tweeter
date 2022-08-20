@@ -1,17 +1,14 @@
 use axum::{response::IntoResponse, Extension, Json};
 use thiserror::Error;
+use tweeter_schemas::{auth_keys::AuthKeysResponse, users::CreateUserRequest};
 
 use crate::{
     records::{self, users::User as UserRecord},
-    service::api::{
-        auth,
-        errors::ErrorResponse,
-        schemas::{auth_keys::AuthKeys, users::CreateUser as CreateUserSchema},
-    },
+    service::api::{auth, errors::ErrorResponse},
 };
 
 pub async fn handler(
-    Json(body): Json<CreateUserSchema>,
+    Json(body): Json<CreateUserRequest>,
     Extension(pool): Extension<sqlx::PgPool>,
 ) -> Result<impl IntoResponse, Errors> {
     let mut user: UserRecord = body.into();
@@ -25,7 +22,7 @@ pub async fn handler(
         Errors::Database(err)
     })?;
 
-    Ok(Json(AuthKeys::new(user.public_key, priv_key)))
+    Ok(Json(AuthKeysResponse::new(user.public_key, priv_key)))
 }
 
 #[derive(Error, Debug)]

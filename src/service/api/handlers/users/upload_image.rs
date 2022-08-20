@@ -7,12 +7,11 @@ use axum::{
     Extension, Json,
 };
 use thiserror::Error;
+use tweeter_schemas::users::UserResponse;
 
 use crate::{
     records::{errors::Errors as RecordErrors, users::User as UserRecord},
-    service::api::{
-        auth::craber::Claims, errors::ErrorResponse, schemas::users::User as UserSchema,
-    },
+    service::api::{auth::craber::Claims, errors::ErrorResponse},
 };
 
 use super::IMAGE_EXPR_SECS;
@@ -84,7 +83,7 @@ pub async fn handler(
             })?,
     );
 
-    Ok(Json(UserSchema::from(user)))
+    Ok(Json(UserResponse::from(user)))
 }
 
 fn create_file_name(orig: &String, pub_key: &String) -> String {

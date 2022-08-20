@@ -1968,6 +1968,15 @@ dependencies = [
  "thiserror",
  "tokio",
  "toml",
+ "tweeter-schemas",
+]
+
+[[package]]
+name = "tweeter-schemas"
+version = "0.1.0"
+dependencies = [
+ "http",
+ "serde",
 ]
 
 [[package]]

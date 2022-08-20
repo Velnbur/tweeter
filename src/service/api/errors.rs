@@ -1,6 +1,6 @@
 use axum::{http::StatusCode, response::IntoResponse, Json};
 
-use crate::service::api::schemas::errors::Error;
+use tweeter_schemas::errors::Error;
 
 pub enum ErrorResponse {
     InternalError,

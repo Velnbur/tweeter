@@ -1,6 +1,7 @@
 use axum::{response::IntoResponse, Extension, Json};
 use thiserror::Error;
 use tokio::sync::mpsc::Sender;
+use tweeter_schemas::tweets::{CreateTweetRequest, TweetResponse};
 
 use crate::{
     records::{
@@ -9,13 +10,12 @@ use crate::{
     service::api::{
         auth::{self, craber::Claims},
         errors::ErrorResponse,
-        schemas::tweets::{CreateTweet as CreateTweetSchema, Tweet as TweetSchema},
     },
 };
 
 pub async fn handler(
     claims: Claims,
-    Json(body): Json<CreateTweetSchema>,
+    Json(body): Json<CreateTweetRequest>,
     Extension(pool): Extension<sqlx::PgPool>,
     Extension(chan): Extension<Sender<TweetRecord>>,
 ) -> Result<impl IntoResponse, Errors> {
@@ -48,7 +48,7 @@ pub async fn handler(
         Errors::FailedToSend
     })?;
 
-    Ok(Json(TweetSchema::from(tweet)))
+    Ok(Json(TweetResponse::from(tweet)))
 }
 
 #[derive(Error, Debug)]

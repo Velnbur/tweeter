@@ -1,9 +1,10 @@
 use axum::{extract::Query, response::IntoResponse, Extension, Json};
 use thiserror::Error;
+use tweeter_schemas::tweets::{Tweet as TweetSchema, TweetListResponse};
 
 use crate::{
     records::{pagination::Pagination, tweets::Tweet as TweetRecord},
-    service::api::{errors::ErrorResponse, schemas::tweets::TweetList as TweetListSchema},
+    service::api::errors::ErrorResponse,
 };
 
 pub async fn handler(
@@ -17,7 +18,12 @@ pub async fn handler(
             Errors::Database
         })?;
 
-    Ok(Json(TweetListSchema::from(tweets)))
+    Ok(Json(TweetListResponse {
+        data: tweets
+            .into_iter()
+            .map(|tweet| TweetSchema::from(tweet))
+            .collect(),
+    }))
 }
 
 #[derive(Error, Debug)]

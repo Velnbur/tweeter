@@ -2,7 +2,6 @@ mod auth;
 mod errors;
 mod handlers;
 mod router;
-mod schemas;
 
 use tokio::sync::mpsc::Sender;
 

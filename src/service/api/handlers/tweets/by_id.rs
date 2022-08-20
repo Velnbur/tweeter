@@ -3,8 +3,10 @@ use thiserror::Error;
 
 use crate::{
     records::{errors::Errors as RecordErrors, tweets::Tweet as TweetRecord},
-    service::api::{errors::ErrorResponse, schemas::tweets::Tweet as TweetSchema},
+    service::api::errors::ErrorResponse,
 };
+
+use tweeter_schemas::tweets::Tweet as TweetSchema;
 
 pub async fn handler(
     Path(id): Path<i64>,

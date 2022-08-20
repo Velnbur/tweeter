@@ -1,9 +1,10 @@
 use axum::{extract::Path, response::IntoResponse, Extension, Json};
 use thiserror::Error;
+use tweeter_schemas::users::UserResponse;
 
 use crate::{
     records::{errors::Errors as RecordErrors, users::User as UserRecord},
-    service::api::{errors::ErrorResponse, schemas::users::User as UserSchema},
+    service::api::errors::ErrorResponse,
 };
 
 use super::IMAGE_EXPR_SECS;
@@ -32,7 +33,7 @@ pub async fn handler(
         )?);
     }
 
-    Ok(Json(UserSchema::from(user)))
+    Ok(Json(UserResponse::from(user)))
 }
 
 #[derive(Error, Debug)]
