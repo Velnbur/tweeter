@@ -1,5 +1,5 @@
 FROM rust:1.62-slim as builder
-WORKDIR /usr/src/rust-api-example
+WORKDIR /usr/src/tweeter-backend
 COPY . .
 RUN cargo install --path .
 
