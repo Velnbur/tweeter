@@ -1,5 +1,5 @@
 [workspace]
 members = [
-    "backend",
-    "schemas"
+    "tweeter-backend",
+    "tweeter-schemas"
 ]
