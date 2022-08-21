@@ -1,2 +1,3 @@
-backend/target
-schemas/target
+tweeter-frontend/target
+tweeter-backend/target
+tweeter-schemas/target

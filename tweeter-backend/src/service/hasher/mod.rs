@@ -1,3 +1,5 @@
+use std::process::exit;
+
 use crate::records::tweets::Tweet;
 use sha3::{Digest, Sha3_256};
 use sqlx::PgPool;
@@ -22,7 +24,13 @@ impl Hasher {
 
     pub async fn start(&mut self) {
         loop {
-            let mut tweet = self.chan.recv().await.unwrap();
+            let mut tweet = match self.chan.recv().await {
+                Some(val) => val,
+                None => {
+                    log::error!("channel for hashing is not acceptable");
+                    exit(1);
+                }
+            };
             let (last_hash, last_id) = match self.last.clone() {
                 Some(l) => {
                     tweet.previous_id = Some(l.id);
@@ -40,7 +48,7 @@ impl Hasher {
                     continue;
                 }
                 Ok(tweet) => {
-                    log::debug!("successfuly hashed: {}", tweet.id);
+                    log::info!("successfuly hashed: {}", tweet.id);
                     Some(tweet)
                 }
             };

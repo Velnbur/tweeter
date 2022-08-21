@@ -3,7 +3,7 @@ name: rust-api-service
 services:
   backend:
     restart: always
-    build: .
+    build: ./tweeter-backend
     environment:
       - RUST_LOG=debug
     depends_on:
