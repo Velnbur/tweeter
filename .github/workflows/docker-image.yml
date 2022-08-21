@@ -41,4 +41,4 @@ jobs:
           file: ./tweeter-backend/Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: velnbur/tweeter-backend:latest
+          tags: velnbur/tweeter:latest
