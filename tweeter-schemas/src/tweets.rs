@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::users::User;
+
 use super::key::Key;
 use super::relation::Relation;
 use super::resource_type::ResourceType;
@@ -32,11 +34,14 @@ pub struct Tweet {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TweetResponse {
     pub data: Tweet,
+    pub include: Option<User>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TweetListResponse {
     pub data: Vec<Tweet>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub include: Option<Vec<User>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
