@@ -1,14 +1,14 @@
 [server]
-port = 8080
+port = 8000
 
 [db]
-url = "postgresql://test:test@localhost:5432/test"
+url = "postgresql://test:test@db:5432/test"
 
 [logger]
 level = "info"
 
 [storage]
-endpoint = "http://localhost:9000"
+endpoint = "http://storage:9000"
 bucket = "profile-images"
 access_key = "miniominio"
 secret_key = "secretsecret"
