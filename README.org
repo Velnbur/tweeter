@@ -1,1 +1,94 @@
-* tweeter full stack app
+* tweeter
+
+Tweeter - is a full stack application fully written in Rust programming language.
+
+** Description
+
+As you may understand from it's name, this project is a small and simple copy of
+twitter platform with using some of the ideas from web3 technologies.
+
+*** Authentication
+
+Authentication, as in most decentralized or web3 applications, is based on
+asymmetrical encryption, or simply on pair of public and private keys, with
+which you should encrypt some data and in appropriate way send it to endpoint
+as kind of a /auth token/.
+
+Algorithm is ECDSA.
+
+#+BEGIN_QUOTE
+NOTE: all keys are encrypted by base58 algorithm
+#+END_QUOTE
+
+**** Craber token
+
+Is a type of token that is used in auth system in this project. It consists of
+three parts:
+
++ current timestamp
++ public key
++ first two parts encrypted with private key divided by ~.~ symbol
+
+For example, if ~1661410640~ - is a timestamp and ~21jjUWrgNtNUEVYq2eNa9h1Vuz9m8UkPQ2pZByxY4k1C2~ -
+is a user's public key, the ~craber token~ may look like this:
+
+#+BEGIN_SRC
+1661410640.21jjUWrgNtNUEVYq2eNa9h1Vuz9m8UkPQ2pZByxY4k1C2.381yXYun2JcGVy4q1K5EHQfV3KdNNxxT4by8mc81SsP6W2JxKxz4jVAhPzquA6TMN28kwzeJoDfdGWvp64DmfPNyVCC3WeGN
+#+END_SRC
+
+Where ~381yXYun2JcGVy4q1K5EHQfV3KdNNxxT4by8mc81SsP6W2JxKxz4jVAhPzquA6TMN28kwzeJoDfdGWvp64DmfPNyVCC3WeGN~
+is an encrypted with private key text: ~1661410640.21jjUWrgNtNUEVYq2eNa9h1Vuz9m8UkPQ2pZByxY4k1C2~
+
+This token must be sent in ~Authorization~ HTTP header with ~Craber {{craber token}}~
+schema as a value.
+
+*** Database structure
+
+The database structure is actually a blockchain, which will explained below
+in ~Tweet~ structure description.
+
+*** Tweet
+
+Tweet is simple structure that contains of:
+
++ text (max length is 256 symbols)
++ timestamp of tweet creation
++ public key of a user that created this tweet
++ signature
++ hash
+
+**** Signature
+
+Signature is a signed content of tweet (except signature of course) divided
+by newline symbol.
+
+For example, if tweet's text is ~Hello, world!~, timestamp - ~1661410640~,
+and public key - ~21jjUWrgNtNUEVYq2eNa9h1Vuz9m8UkPQ2pZByxY4k1C2~, the
+content to sign will be:
+
+#+BEGIN_SRC
+Hello, world!
+166141064
+21jjUWrgNtNUEVYq2eNa9h1Vuz9m8UkPQ2pZByxY4k1C2
+#+END_SRC
+
+**** Hash
+
+Hash field is a string that is created by hashing with ~sha3~ algorithm
+all of the tweet fields, including it's ~id~, signature and the hash of
+last added to blockchain tweet.
+
+#+BEGIN_SRC
+{{id}}{{text}}{{timestamp}}{{user's public key}}{{signature}}{{last tweet's hash}}
+#+END_SRC
+
+For example, if take content from [[Signature]] and tweet's id is ~123~, and
+hash of last hashed tweet is ~ksjhdfkjahsdkfhaskdhfkjsahdfkskdhfksadhf~,
+to create current tweet's hash you need to hash:
+
+#+BEGIN_SRC
+123Hello, world!16614106421jjUWrgNtNUEVYq2eNa9h1Vuz9m8UkPQ2pZByxY4k1C2ksjhdfkjahsdkfhaskdhfkjsahdfkskdhfksadhf
+#+END_SRC
+
+Hash field is an optional field, what means that if hash field in not
+presented in tweet the current one is still not added to blockchain.
