@@ -4,7 +4,7 @@ use super::key::Key;
 use super::relation::Relation;
 use super::resource_type::ResourceType;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TweetAttributes {
     pub text: String,
     pub timestamp: i32,
@@ -13,14 +13,14 @@ pub struct TweetAttributes {
     pub hash: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TweetRelations {
     pub author: Relation,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub previous: Option<Relation>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Tweet {
     #[serde(flatten)]
     pub key: Key,
@@ -29,24 +29,24 @@ pub struct Tweet {
     pub relationships: TweetRelations,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TweetResponse {
     pub data: Tweet,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TweetListResponse {
     pub data: Vec<Tweet>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CreateTweetAttributes {
     pub text: String,
     pub timestamp: i32,
     pub signature: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CreateTweet {
     #[serde(rename = "type")]
     _type: ResourceType,
@@ -66,7 +66,7 @@ impl CreateTweet {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CreateTweetRequest {
     pub data: CreateTweet,
 }

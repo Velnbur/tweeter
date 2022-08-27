@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use super::resource_type::ResourceType;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Key {
     pub id: String,
     #[serde(rename = "type")]
@@ -11,6 +11,9 @@ pub struct Key {
 
 impl Key {
     pub fn new<T: ToString>(id: T, _type: ResourceType) -> Self {
-        Self { id: id.to_string(), _type }
+        Self {
+            id: id.to_string(),
+            _type,
+        }
     }
 }
