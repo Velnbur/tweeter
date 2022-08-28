@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
-use crate::users::User;
+use crate::include::Include;
+use crate::users::{User, UserAttributes};
 
 use super::key::Key;
 use super::relation::Relation;
@@ -74,4 +75,89 @@ impl CreateTweet {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CreateTweetRequest {
     pub data: CreateTweet,
+}
+
+use tweeter_models::tweet::Tweet as TweetModel;
+
+impl Into<TweetModel> for CreateTweetRequest {
+    fn into(self) -> TweetModel {
+        TweetModel {
+            id: 0,
+            text: self.data.attributes.text,
+            signature: self.data.attributes.signature,
+            timestamp: self.data.attributes.timestamp,
+            hash: None,
+            user_id: String::new(),
+            previous_id: None,
+        }
+    }
+}
+
+impl From<TweetModel> for Tweet {
+    fn from(tweet: TweetModel) -> Self {
+        let previous = match tweet.previous_id {
+            None => None,
+            Some(id) => Some(Relation {
+                data: Key::new(id.to_string(), ResourceType::Tweet),
+            }),
+        };
+
+        Self {
+            key: Key::new(tweet.id, ResourceType::Tweet),
+            attributes: TweetAttributes {
+                text: tweet.text,
+                signature: tweet.signature,
+                timestamp: tweet.timestamp,
+                hash: tweet.hash,
+            },
+            relationships: TweetRelations {
+                author: Relation {
+                    data: Key::new(tweet.user_id, ResourceType::User),
+                },
+                previous,
+            },
+        }
+    }
+}
+
+impl From<TweetModel> for TweetResponse {
+    fn from(tweet: TweetModel) -> Self {
+        Self {
+            data: Tweet::from(tweet),
+            include: None,
+        }
+    }
+}
+
+impl From<Vec<TweetModel>> for TweetListResponse {
+    fn from(tweets: Vec<TweetModel>) -> Self {
+        Self {
+            data: tweets.into_iter().map(|tweet| Tweet::from(tweet)).collect(),
+            include: None,
+        }
+    }
+}
+
+use tweeter_models::user::User as UserModel;
+
+impl Include<UserModel> for TweetResponse {
+    fn include(&mut self, user: UserModel) -> &mut Self {
+        self.include = Some(User {
+            key: Key::new(user.public_key, ResourceType::User),
+            attributes: UserAttributes {
+                username: user.username,
+                image_url: user.image_url,
+            },
+        });
+
+        self
+    }
+}
+
+impl Include<Vec<UserModel>> for TweetListResponse {
+    fn include(&mut self, resource: Vec<UserModel>) -> &mut Self {
+        self.include = Some(resource.into_iter().map(|user| User::from(user)).collect());
+
+        self
+    }
 }

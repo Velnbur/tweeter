@@ -48,3 +48,35 @@ pub struct User {
 pub struct UserResponse {
     pub data: User,
 }
+
+use tweeter_models::user::User as UserModel;
+
+impl Into<UserModel> for CreateUserRequest {
+    fn into(self) -> UserModel {
+        UserModel {
+            public_key: String::new(),
+            username: self.data.attributes.username,
+            image_url: None,
+        }
+    }
+}
+
+impl From<UserModel> for User {
+    fn from(user: UserModel) -> Self {
+        Self {
+            key: Key::new(user.public_key, ResourceType::User),
+            attributes: UserAttributes {
+                username: user.username,
+                image_url: user.image_url,
+            },
+        }
+    }
+}
+
+impl From<UserModel> for UserResponse {
+    fn from(user: UserModel) -> Self {
+        Self {
+            data: User::from(user),
+        }
+    }
+}

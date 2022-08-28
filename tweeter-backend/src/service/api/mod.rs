@@ -4,8 +4,9 @@ mod handlers;
 mod router;
 
 use tokio::sync::mpsc::Sender;
+use tweeter_models::tweet::Tweet;
 
-use crate::{config, records::tweets::Tweet};
+use crate::config;
 
 pub async fn run(cfg: config::Config, sender: Sender<Tweet>) {
     axum::Server::bind(&cfg.server.into())

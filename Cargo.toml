@@ -2,5 +2,6 @@
 members = [
     "tweeter-backend",
     "tweeter-frontend",
-    "tweeter-schemas"
+    "tweeter-schemas",
+    "tweeter-models"
 ]

@@ -2,7 +2,7 @@ use axum::{extract::Path, Extension, Json};
 use tweeter_schemas::users::UserResponse;
 
 use crate::{
-    records::{errors::Errors as RecordErrors, users::User as UserRecord},
+    records::{errors::Errors as RecordErrors, users::UsersRepo},
     service::api::errors::ErrorResponse,
 };
 
@@ -13,7 +13,9 @@ pub async fn handler(
     Extension(pool): Extension<sqlx::PgPool>,
     Extension(storage): Extension<s3::Bucket>,
 ) -> Result<Json<UserResponse>, ErrorResponse> {
-    let mut user = UserRecord::find(pub_key, &pool)
+    let mut user = UsersRepo::new(&pool)
+        .where_pub_key(pub_key)
+        .get()
         .await
         .map_err(|err| match err {
             RecordErrors::NotFound => ErrorResponse::NotFound(err.to_string()),

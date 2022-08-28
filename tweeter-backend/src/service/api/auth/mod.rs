@@ -14,8 +14,7 @@ pub fn generate_keys() -> (String, String) {
 }
 
 use thiserror::Error;
-
-use crate::records::tweets::Tweet;
+use tweeter_models::tweet::Tweet;
 
 #[derive(Error, Debug)]
 pub enum VerifyError {
@@ -63,8 +62,7 @@ pub fn verify_tweet(tweet: &Tweet) -> Result<(), VerifyError> {
 mod test {
     use k256::ecdsa::{Signature, SigningKey};
     use signature::Signer;
-
-    use crate::records::tweets::Tweet;
+    use tweeter_models::tweet::Tweet;
 
     use super::{generate_keys, verify_signature, verify_tweet};
 

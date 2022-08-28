@@ -2115,6 +2115,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "toml",
+ "tweeter-models",
  "tweeter-schemas",
 ]
 
@@ -2136,11 +2137,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "tweeter-models"
+version = "0.1.0"
+dependencies = [
+ "sqlx",
+]
+
+[[package]]
 name = "tweeter-schemas"
 version = "0.1.0"
 dependencies = [
  "http",
  "serde",
+ "tweeter-models",
 ]
 
 [[package]]

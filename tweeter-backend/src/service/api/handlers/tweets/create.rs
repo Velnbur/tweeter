@@ -1,11 +1,10 @@
 use axum::{Extension, Json};
 use tokio::sync::mpsc::Sender;
+use tweeter_models::tweet::Tweet as TweetModel;
 use tweeter_schemas::tweets::{CreateTweetRequest, TweetResponse};
 
 use crate::{
-    records::{
-        errors::Errors as RecordErrors, tweets::Tweet as TweetRecord, users::User as UserRecord,
-    },
+    records::{errors::Errors as RecordErrors, tweets::TweetsRepo, users::UsersRepo},
     service::api::{
         auth::{self, craber::Claims},
         errors::ErrorResponse,
@@ -16,9 +15,11 @@ pub async fn handler(
     claims: Claims,
     Json(body): Json<CreateTweetRequest>,
     Extension(pool): Extension<sqlx::PgPool>,
-    Extension(chan): Extension<Sender<TweetRecord>>,
+    Extension(chan): Extension<Sender<TweetModel>>,
 ) -> Result<Json<TweetResponse>, ErrorResponse> {
-    let user = UserRecord::find(claims.pub_key, &pool)
+    let user = UsersRepo::new(&pool)
+        .where_pub_key(claims.pub_key)
+        .get()
         .await
         .map_err(|err| match err {
             RecordErrors::NotFound => ErrorResponse::Unauthorized,
@@ -28,7 +29,7 @@ pub async fn handler(
             }
         })?;
 
-    let mut tweet: TweetRecord = body.into();
+    let mut tweet: TweetModel = body.into();
 
     tweet.user_id = user.public_key;
 
@@ -37,7 +38,7 @@ pub async fn handler(
         ErrorResponse::Forbidden(err.to_string())
     })?;
 
-    let tweet = tweet.create(&pool).await.map_err(|err| {
+    let tweet = TweetsRepo::new(&pool).insert(tweet).await.map_err(|err| {
         log::error!("Failed to insert tweet: {err}");
         ErrorResponse::InternalError
     })?;

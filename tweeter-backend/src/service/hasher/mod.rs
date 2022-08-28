@@ -1,9 +1,11 @@
 use std::process::exit;
 
-use crate::records::tweets::Tweet;
 use sha3::{Digest, Sha3_256};
 use sqlx::PgPool;
 use tokio::sync::mpsc::Receiver;
+use tweeter_models::tweet::Tweet;
+
+use crate::records::tweets::TweetsRepo;
 
 pub struct Hasher {
     pool: PgPool,
@@ -22,7 +24,7 @@ impl Hasher {
         }
     }
 
-    pub async fn start(&mut self) {
+    pub async fn start(&mut self) -> ! {
         loop {
             let mut tweet = match self.chan.recv().await {
                 Some(val) => val,
@@ -42,7 +44,11 @@ impl Hasher {
 
             Self::hash_tweet(&mut tweet, &last_hash);
 
-            self.last = match tweet.update(&self.pool).await {
+            let res = TweetsRepo::new(&self.pool)
+                .where_id(tweet.id)
+                .update(tweet)
+                .await;
+            self.last = match res {
                 Err(err) => {
                     log::error!("Failed to hash tweet with error: {err}");
                     continue;

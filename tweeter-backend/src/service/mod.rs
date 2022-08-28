@@ -2,8 +2,9 @@ mod api;
 mod hasher;
 
 use tokio::sync::mpsc::{self, Receiver, Sender};
+use tweeter_models::tweet::Tweet;
 
-use crate::{config, records::tweets::Tweet};
+use crate::config;
 
 pub async fn run(cfg: config::Config) {
     let (sender, receiver): (Sender<Tweet>, Receiver<Tweet>) = mpsc::channel(1000);

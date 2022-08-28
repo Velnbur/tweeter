@@ -8,7 +8,7 @@ use axum::{
 use tweeter_schemas::users::UserResponse;
 
 use crate::{
-    records::{errors::Errors as RecordErrors, users::User as UserRecord},
+    records::{errors::Errors as RecordErrors, users::UsersRepo},
     service::api::{auth::craber::Claims, errors::ErrorResponse},
 };
 
@@ -26,7 +26,9 @@ pub async fn handler(
     Extension(pool): Extension<sqlx::PgPool>,
     Extension(storage): Extension<s3::Bucket>,
 ) -> Result<Json<UserResponse>, ErrorResponse> {
-    let mut user = UserRecord::find(claims.pub_key, &pool)
+    let mut user = UsersRepo::new(&pool)
+        .where_pub_key(claims.pub_key)
+        .get()
         .await
         .map_err(|err| match err {
             RecordErrors::NotFound => ErrorResponse::Unauthorized,
@@ -75,7 +77,7 @@ pub async fn handler(
 
     user.image_url = Some(file_name);
 
-    let mut user = user.update(&pool).await.map_err(|err| {
+    let mut user = UsersRepo::new(&pool).update(user).await.map_err(|err| {
         log::error!("failed to update user's image: {err}");
         ErrorResponse::InternalError
     })?;

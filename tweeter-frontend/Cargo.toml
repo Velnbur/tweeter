@@ -1,13 +1,32 @@
 [package]
 name = "tweeter-frontend"
+authors = ["Velnbur"]
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-yew = "0.19"
-gloo-net = "0.2.3"
-wasm-bindgen-futures = "0.4.32"
-serde = { version = "1.0", features = ["derive"] }
+thiserror = "1.0.31"
+log = "0.4.6"
+wasm-logger = "0.2.0"
+const_format = "0.2.26"
+serde_json = { version = "1.0", features = ["std"] }
+
 tweeter-schemas = { path = "../tweeter-schemas", version = "0.1" }
+
+yew = { version = "0.19.3" }
+wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
+wasm-bindgen-futures = "0.4"
+gloo-utils = "0.1"
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+  "Headers",
+  "Request",
+  "RequestInit",
+  "RequestMode",
+  "Response",
+  "Window",
+]

@@ -3,8 +3,9 @@ use axum::{
     Extension, Router,
 };
 use tokio::sync::mpsc::Sender;
+use tweeter_models::tweet::Tweet;
 
-use crate::{config::Config, records::tweets::Tweet};
+use crate::config::Config;
 
 use super::handlers;
 

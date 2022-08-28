@@ -51,3 +51,4 @@ rust-s3 = { default-features = false, version = "0.32.3", features = [ "tokio-ru
 
 # Internal dependecies
 tweeter-schemas = { path = "../tweeter-schemas", version = "0.1" }
+tweeter-models = { path = "../tweeter-models", version = "0.1", features = [ "sqlx" ] }
