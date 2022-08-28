@@ -1,3 +1,5 @@
+use std::net::AddrParseError;
+
 use serde::Deserialize;
 use thiserror::Error;
 
@@ -25,6 +27,8 @@ pub enum Error {
     StorageError(#[from] s3::error::S3Error),
     #[error("failed to init logger: {0}")]
     LoggerError(#[from] logger::Error),
+    #[error("failed to parse server params: {0}")]
+    ServerError(#[from] AddrParseError),
 }
 
 impl Raw {
@@ -32,9 +36,9 @@ impl Raw {
         self.logger.init().map_err(Error::LoggerError)?;
 
         Ok(Config {
-            server: self.server.into(),
-            db: self.db.parse().await.map_err(Error::DbError)?,
-            storage: self.storage.parse().await.map_err(Error::StorageError)?,
+            server: self.server.parse()?,
+            db: self.db.parse().await?,
+            storage: self.storage.parse().await?,
         })
     }
 }

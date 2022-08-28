@@ -11,9 +11,11 @@ pub struct UsersRepo<'a> {
     pool: &'a sqlx::PgPool,
 }
 
+unsafe impl<'a> Send for UsersRepo<'a> {}
+
 impl<'a> UsersRepo<'a> {
-    pub fn new(pool: &'a sqlx::PgPool) -> &mut Self {
-        &mut Self {
+    pub fn new(pool: &'a sqlx::PgPool) -> Self {
+        Self {
             insert: Query::insert()
                 .into_table(Users::Table)
                 .columns([Users::PublicKey, Users::Username])
@@ -33,7 +35,7 @@ impl<'a> UsersRepo<'a> {
 
     pub fn where_pub_key(&mut self, pub_key: String) -> &mut Self {
         self.select
-            .and_where(Expr::col(Users::PublicKey).eq(pub_key));
+            .and_where(Expr::col(Users::PublicKey).eq(pub_key.clone()));
         self.update
             .and_where(Expr::col(Users::PublicKey).eq(pub_key));
 
@@ -42,7 +44,7 @@ impl<'a> UsersRepo<'a> {
 
     pub fn where_pub_keys(&mut self, pub_keys: Vec<String>) -> &mut Self {
         self.select
-            .and_where(Expr::col(Users::PublicKey).is_in(pub_keys));
+            .and_where(Expr::col(Users::PublicKey).is_in(pub_keys.clone()));
         self.update
             .and_where(Expr::col(Users::PublicKey).is_in(pub_keys));
 

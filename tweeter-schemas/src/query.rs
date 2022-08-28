@@ -4,7 +4,7 @@ use crate::resource_type::ResourceType;
 
 #[derive(Deserialize, Serialize)]
 pub struct Include {
-    pub include: ResourceType,
+    pub include: Option<ResourceType>,
 }
 
 #[derive(Deserialize, Clone, Copy)]

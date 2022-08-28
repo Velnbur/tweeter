@@ -45,6 +45,18 @@ services:
     ports:
       - "9000:9000"
 
+  proxy:
+    image: nginx
+    volumes:
+      - type: bind
+        source: ./nginx.conf
+        target: /etc/nginx/conf.d/default.conf
+        read_only: true
+    ports:
+      - 8080:8080
+    depends_on:
+      - backend
+
 volumes:
   db-data: {}
   storage-data: {}

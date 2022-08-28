@@ -12,9 +12,11 @@ pub struct TweetsRepo<'a> {
     pool: &'a sqlx::PgPool,
 }
 
+unsafe impl<'a> Send for TweetsRepo<'a> {}
+
 impl<'a> TweetsRepo<'a> {
-    pub fn new(pool: &'a sqlx::PgPool) -> &mut Self {
-        &mut Self {
+    pub fn new(pool: &'a sqlx::PgPool) -> Self {
+        Self {
             insert: Query::insert()
                 .into_table(Tweets::Table)
                 .columns([

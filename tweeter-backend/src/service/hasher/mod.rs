@@ -24,7 +24,8 @@ impl Hasher {
         }
     }
 
-    pub async fn start(&mut self) -> ! {
+    pub async fn start(&mut self) {
+        log::info!("hasher is starting...");
         loop {
             let mut tweet = match self.chan.recv().await {
                 Some(val) => val,

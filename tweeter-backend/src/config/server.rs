@@ -1,16 +1,13 @@
-use std::net::{Ipv4Addr, SocketAddrV4};
 use serde::Deserialize;
+use std::{net::SocketAddrV4, str::FromStr};
 
 #[derive(Deserialize)]
 pub(super) struct Server {
-    pub port: u16,
+    pub addr: String,
 }
 
-impl Into<SocketAddrV4> for Server {
-    fn into(self) -> SocketAddrV4 {
-        SocketAddrV4::new(
-            Ipv4Addr::new(127, 0, 0, 1),
-            self.port
-        )
+impl Server {
+    pub fn parse(self) -> Result<SocketAddrV4, std::net::AddrParseError> {
+        SocketAddrV4::from_str(&self.addr)
     }
 }

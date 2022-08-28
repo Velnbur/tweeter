@@ -26,9 +26,9 @@ pub enum Error {
 
 impl Config {
     pub async fn from_file(filename: String) -> Result<Self, Error> {
-        let content = fs::read_to_string(filename).map_err(Error::FileError)?;
+        let content = fs::read_to_string(filename)?;
 
-        let raw_config: raw::Raw = toml::from_str(&content).map_err(Error::DeserializeError)?;
+        let raw_config: raw::Raw = toml::from_str(&content)?;
 
         raw_config.parse().await.map_err(Error::ParseError)
     }

@@ -1,5 +1,5 @@
 [server]
-port = 8000
+addr = "0.0.0.0:8000"
 
 [db]
 url = "postgresql://test:test@db:5432/test"
@@ -8,7 +8,7 @@ url = "postgresql://test:test@db:5432/test"
 level = "info"
 
 [storage]
-endpoint = "http://storage:9000"
+endpoint = "http://localhost:9000"
 bucket = "profile-images"
 access_key = "miniominio"
 secret_key = "secretsecret"

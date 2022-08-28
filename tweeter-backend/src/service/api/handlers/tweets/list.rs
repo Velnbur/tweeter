@@ -27,17 +27,19 @@ pub async fn handler(
 
     let mut resp = TweetListResponse::from(tweets.clone()); // TODO:
 
-    if include_user.include == ResourceType::User {
-        let users = UsersRepo::new(&pool)
-            .where_pub_keys(tweets.into_iter().map(|tweet| tweet.user_id).collect())
-            .select()
-            .await
-            .map_err(|err| {
-                log::error!("Failed to get corresponding users: {err}");
-                ErrorResponse::InternalError
-            })?;
+    if let Some(value) = include_user.include {
+        if value == ResourceType::User {
+            let users = UsersRepo::new(&pool)
+                .where_pub_keys(tweets.into_iter().map(|tweet| tweet.user_id).collect())
+                .select()
+                .await
+                .map_err(|err| {
+                    log::error!("Failed to get corresponding users: {err}");
+                    ErrorResponse::InternalError
+                })?;
 
-        resp.include = Some(users.into_iter().map(|user| User::from(user)).collect());
+            resp.include = Some(users.into_iter().map(|user| User::from(user)).collect());
+        }
     }
 
     Ok(Json(resp))

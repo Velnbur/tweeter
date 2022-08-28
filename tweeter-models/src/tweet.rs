@@ -1,5 +1,5 @@
-#[cfg(feature = "sqlx")]
-#[derive(sqlx::FromRow, Clone, Debug)]
+#[cfg_attr(feature = "sqlx", derive(sqlx::FromRow))]
+#[derive(Clone, Debug)]
 pub struct Tweet {
     pub id: i64,
     pub text: String,
