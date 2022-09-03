@@ -15,21 +15,22 @@ pub enum Order {
 }
 
 pub const DEFAULT_PAGE_LIMIT: u64 = 10;
-pub const DEAFAULT_PAGE_NUMBER: u64 = 0;
+pub const DEFAULT_PAGE_NUMBER: u64 = 0;
+pub const DEFAULT_PAGE_ORDER: Order = Order::Desc;
 
 fn default_page_limit() -> u64 {
     DEFAULT_PAGE_LIMIT
 }
 
 fn default_page_order() -> Order {
-    Order::Desc
+    DEFAULT_PAGE_ORDER
 }
 
 fn default_page_number() -> u64 {
-    DEAFAULT_PAGE_NUMBER
+    DEFAULT_PAGE_NUMBER
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct Pagination {
     #[serde(rename = "page[limit]", default = "default_page_limit")]
     pub limit: u64,
@@ -37,4 +38,14 @@ pub struct Pagination {
     pub order: Order,
     #[serde(rename = "page[number]", default = "default_page_number")]
     pub number: u64,
+}
+
+impl Default for Pagination {
+    fn default() -> Self {
+        Self {
+            limit: default_page_limit(),
+            order: default_page_order(),
+            number: default_page_number(),
+        }
+    }
 }

@@ -1,3 +1,5 @@
+use std::num::ParseIntError;
+
 use serde::{Deserialize, Serialize};
 
 use crate::include::Include;
@@ -126,6 +128,46 @@ impl From<TweetModel> for TweetResponse {
             data: Tweet::from(tweet),
             include: None,
         }
+    }
+}
+
+impl TryFrom<Tweet> for TweetModel {
+    type Error = ParseIntError;
+
+    fn try_from(tweet: Tweet) -> Result<Self, Self::Error> {
+        let previous_id = match tweet.relationships.previous {
+            Some(val) => Some(val.data.id.parse()?),
+            None => None,
+        };
+        Ok(Self {
+            id: tweet.key.id.parse()?,
+            text: tweet.attributes.text,
+            timestamp: tweet.attributes.timestamp,
+            user_id: tweet.relationships.author.data.id,
+            signature: tweet.attributes.signature,
+            hash: tweet.attributes.hash,
+            previous_id,
+        })
+    }
+}
+
+impl TryFrom<TweetResponse> for TweetModel {
+    type Error = ParseIntError;
+
+    fn try_from(value: TweetResponse) -> Result<Self, Self::Error> {
+        TweetModel::try_from(value.data)
+    }
+}
+
+impl TryFrom<TweetListResponse> for Vec<TweetModel> {
+    type Error = ParseIntError;
+
+    fn try_from(value: TweetListResponse) -> Result<Self, Self::Error> {
+        value
+            .data
+            .into_iter()
+            .map(|tweet| TweetModel::try_from(tweet))
+            .collect()
     }
 }
 

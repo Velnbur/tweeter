@@ -1,15 +1,18 @@
 use core::fmt;
-use std::{
-    error::Error,
-    fmt::{Debug, Display, Formatter},
-};
+use std::fmt::Debug;
+use std::fmt::Display;
+use std::fmt::Formatter;
 
-use tweeter_schemas::tweets::TweetListResponse;
+use tweeter_schemas::{
+    query::Pagination,
+    tweets::{TweetListResponse, TweetResponse},
+};
+use url::Url;
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, RequestMode, Response};
 
-use crate::config::API_GET_TWEETS_URL;
+use crate::config::API_TWEETS_URL;
 
 #[derive(Debug)]
 pub struct FetchError {
@@ -21,8 +24,6 @@ impl Display for FetchError {
         Debug::fmt(&self.err, f)
     }
 }
-
-impl Error for FetchError {}
 
 impl From<JsValue> for FetchError {
     fn from(value: JsValue) -> Self {
@@ -36,20 +37,58 @@ pub enum FetchState<T> {
     Failed(FetchError),
 }
 
-pub async fn fetch_tweets() -> Result<TweetListResponse, FetchError> {
+pub async fn fetch_tweets(
+    user: bool,
+    pages: Pagination, // TODO: add pagination rendering
+) -> Result<TweetListResponse, FetchError> {
+    let mut url = Url::parse(API_TWEETS_URL).unwrap();
+
+    if user {
+        url.query_pairs_mut().append_pair("include", "user");
+    }
+
     let mut opts = RequestInit::new();
     opts.method("GET");
     opts.mode(RequestMode::Cors);
 
-    let req = Request::new_with_str_and_init(API_GET_TWEETS_URL, &opts)?;
+    let req = Request::new_with_str_and_init(url.as_str(), &opts)?;
 
+    let resp = fetch(req).await?;
+
+    let tweets: TweetListResponse = resp.into_serde().unwrap();
+
+    Ok(tweets)
+}
+
+pub async fn fetch_tweet(id: i64, user: bool) -> Result<TweetResponse, FetchError> {
+    let raw = format!("{}/{}", API_TWEETS_URL, id);
+
+    let mut url = Url::parse(&raw).unwrap();
+
+    if user {
+        url.query_pairs_mut().append_pair("include", "user");
+    }
+
+    let mut opts = RequestInit::new();
+    opts.method("GET");
+    opts.mode(RequestMode::Cors);
+
+    let req = Request::new_with_str_and_init(url.as_str(), &opts)?;
+
+    let resp = fetch(req).await?;
+
+    let tweet: TweetResponse = resp.into_serde().unwrap();
+
+    Ok(tweet)
+}
+
+async fn fetch(req: Request) -> Result<JsValue, FetchError> {
     let window = gloo_utils::window();
     let resp_value = JsFuture::from(window.fetch_with_request(&req)).await?;
 
-    let resp: Response = resp_value.dyn_into().unwrap();
+    let resp: Response = resp_value.dyn_into()?;
 
-    let tweets = JsFuture::from(resp.text()?).await?;
-    let tweets: TweetListResponse = tweets.into_serde().unwrap();
+    let res = JsFuture::from(resp.json()?).await?;
 
-    Ok(tweets)
+    Ok(res)
 }

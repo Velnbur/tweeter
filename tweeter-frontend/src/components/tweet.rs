@@ -3,7 +3,7 @@ use yew::html;
 use yew::Html;
 use yew::Properties;
 
-use crate::models::tweet::Tweet;
+use tweeter_models::tweet::Tweet;
 
 #[derive(Properties, PartialEq)]
 pub struct TweetProps {
@@ -15,7 +15,7 @@ pub fn tweet(TweetProps { tweet }: &TweetProps) -> Html {
     html! {
         <div>
             <p> { tweet.text.clone() } </p>
-            <p> { tweet.author.clone() } </p>
+            <p> { tweet.user_id.clone() } </p>
             <p> { tweet.signature.clone() } </p>
         </div>
     }

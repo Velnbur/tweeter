@@ -20,27 +20,16 @@ use tweeter_models::tweet::Tweet;
 pub enum VerifyError {
     #[error("failed to decode: {0}")]
     DecodeError(#[from] bs58::decode::Error),
-    #[error("failed to create verifying key: {0}")]
-    VerifyKeyError(ecdsa::Error),
     #[error("failed to verify: {0}")]
-    VerifyingError(signature::Error),
+    VerifyingError(#[from] signature::Error),
 }
 
 pub fn verify_signature(msg: &String, sign: &String, pub_key: &String) -> Result<(), VerifyError> {
-    let key = VerifyingKey::from_sec1_bytes(
-        bs58::decode(pub_key)
-            .into_vec()
-            .map_err(VerifyError::DecodeError)?
-            .as_slice(),
-    )
-    .map_err(VerifyError::VerifyKeyError)?;
+    let decoded_bytes = bs58::decode(pub_key).into_vec()?;
 
-    let sign = Signature::from_der(
-        &bs58::decode(sign)
-            .into_vec()
-            .map_err(VerifyError::DecodeError)?,
-    )
-    .map_err(VerifyError::VerifyingError)?;
+    let key = VerifyingKey::from_sec1_bytes(&decoded_bytes.as_slice())?;
+
+    let sign = Signature::from_der(&bs58::decode(sign).into_vec()?)?;
 
     key.verify(msg.as_bytes(), &sign)
         .map_err(VerifyError::VerifyingError)
