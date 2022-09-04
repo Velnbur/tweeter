@@ -1,8 +1,10 @@
 use core::fmt;
+use serde_qs as qs;
 use std::fmt::Debug;
 use std::fmt::Display;
 use std::fmt::Formatter;
 
+use tweeter_schemas::users::UserResponse;
 use tweeter_schemas::{
     query::Pagination,
     tweets::{TweetListResponse, TweetResponse},
@@ -13,6 +15,7 @@ use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, RequestMode, Response};
 
 use crate::config::API_TWEETS_URL;
+use crate::config::API_USERS_URL;
 
 #[derive(Debug)]
 pub struct FetchError {
@@ -43,8 +46,14 @@ pub async fn fetch_tweets(
 ) -> Result<TweetListResponse, FetchError> {
     let mut url = Url::parse(API_TWEETS_URL).unwrap();
 
+    let query = qs::to_string(&pages).unwrap_or("".to_string());
+
+    url.set_query(Some(query.as_str()));
+
     if user {
-        url.query_pairs_mut().append_pair("include", "user");
+        url.query_pairs_mut()
+            .append_pair("include", "user")
+            .finish();
     }
 
     let mut opts = RequestInit::new();
@@ -80,6 +89,22 @@ pub async fn fetch_tweet(id: i64, user: bool) -> Result<TweetResponse, FetchErro
     let tweet: TweetResponse = resp.into_serde().unwrap();
 
     Ok(tweet)
+}
+
+pub async fn fetch_user(pub_key: &String) -> Result<UserResponse, FetchError> {
+    let base_url = format!("{}/{}", API_USERS_URL, pub_key);
+
+    let mut opts = RequestInit::new();
+    opts.method("GET");
+    opts.mode(RequestMode::Cors);
+
+    let req = Request::new_with_str_and_init(&base_url, &opts)?;
+
+    let resp = fetch(req).await?;
+
+    let user: UserResponse = resp.into_serde().unwrap();
+
+    Ok(user)
 }
 
 async fn fetch(req: Request) -> Result<JsValue, FetchError> {

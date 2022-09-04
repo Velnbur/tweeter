@@ -7,7 +7,7 @@ pub struct Include {
     pub include: Option<ResourceType>,
 }
 
-#[derive(Deserialize, Clone, Copy)]
+#[derive(Deserialize, Clone, Serialize, PartialEq, Debug)]
 #[serde(rename_all = "kebab-case")]
 pub enum Order {
     Desc,
@@ -30,7 +30,7 @@ fn default_page_number() -> u64 {
     DEFAULT_PAGE_NUMBER
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, Serialize, PartialEq, Debug)]
 pub struct Pagination {
     #[serde(rename = "page[limit]", default = "default_page_limit")]
     pub limit: u64,

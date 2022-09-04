@@ -80,3 +80,19 @@ impl From<UserModel> for UserResponse {
         }
     }
 }
+
+impl From<User> for UserModel {
+    fn from(value: User) -> Self {
+        Self {
+            public_key: value.key.id,
+            username: value.attributes.username,
+            image_url: value.attributes.image_url,
+        }
+    }
+}
+
+impl From<UserResponse> for UserModel {
+    fn from(value: UserResponse) -> Self {
+        UserModel::from(value.data)
+    }
+}
