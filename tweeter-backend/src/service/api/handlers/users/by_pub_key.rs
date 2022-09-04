@@ -3,10 +3,8 @@ use tweeter_schemas::users::UserResponse;
 
 use crate::{
     records::{errors::Errors as RecordErrors, users::UsersRepo},
-    service::api::errors::ErrorResponse,
+    service::api::{errors::ErrorResponse, IMAGE_EXPR_SECS},
 };
-
-use super::IMAGE_EXPR_SECS;
 
 pub async fn handler(
     Path(pub_key): Path<String>,

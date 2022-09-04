@@ -47,7 +47,7 @@ bs58 = "0.4.0"
 sha3 = "0.10.2"
 
 # storage for images
-rust-s3 = { default-features = false, version = "0.32.3", features = [ "tokio-rustls-tls" ] }
+rust-s3 = { default-features = false, version = "0.32.3", features = [ "tokio-rustls-tls", "with-tokio" ] }
 
 # Internal dependecies
 tweeter-schemas = { path = "../tweeter-schemas", version = "0.1" }

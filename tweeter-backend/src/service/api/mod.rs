@@ -15,3 +15,5 @@ pub async fn run(cfg: config::Config, sender: Sender<Tweet>) {
         .await
         .expect("service failed to start");
 }
+
+pub const IMAGE_EXPR_SECS: u32 = 60 * 60 * 24 * 10000; // FIXME: set valid period

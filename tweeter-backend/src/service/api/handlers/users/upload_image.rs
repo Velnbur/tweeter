@@ -9,10 +9,8 @@ use tweeter_schemas::users::UserResponse;
 
 use crate::{
     records::{errors::Errors as RecordErrors, users::UsersRepo},
-    service::api::{auth::craber::Claims, errors::ErrorResponse},
+    service::api::{auth::craber::Claims, errors::ErrorResponse, IMAGE_EXPR_SECS},
 };
-
-use super::IMAGE_EXPR_SECS;
 
 const MAX_IMAGE_SIZE: u64 = 1024 * 1024 * 10; // 10 MB
 
