@@ -2,7 +2,7 @@ use tweeter_models::tweet::Tweet as TweetModel;
 use tweeter_schemas::tweets::TweetResponse;
 use yew::prelude::*;
 
-use crate::components::tweet::TweetComponent;
+use crate::components::tweet::TweetItemComponent;
 use crate::requests::{fetch_tweet, FetchState};
 
 #[derive(Clone, Debug, Eq, PartialEq, Properties)]
@@ -60,7 +60,7 @@ impl Component for Tweet {
                         {"fetching"}
                     },
                     FetchState::Success(content) => html! {
-                        <TweetComponent tweet = { TweetModel::try_from(content.clone()).unwrap() } />
+                        <TweetItemComponent tweet = { TweetModel::try_from(content.clone()).unwrap() } />
                     },
                     FetchState::Failed(_) => todo!(),
                 }

@@ -32,7 +32,7 @@ fn switch(routes: &Route) -> Html {
 #[function_component(Main)]
 fn app() -> Html {
     html! {
-        <div>
+        <div class="containter">
             <nav class="navbar navbar-default">
                 <div class="container-fluid">
                     <div class="navbar-header">
@@ -45,9 +45,11 @@ fn app() -> Html {
                     </ul>
                 </div>
             </nav>
-            <BrowserRouter>
-                <Switch<Route> render={Switch::render(switch)} />
-            </BrowserRouter>
+            <div class="container main">
+                <BrowserRouter>
+                    <Switch<Route> render={Switch::render(switch)} />
+                </BrowserRouter>
+            </div>
         </div>
     }
 }
