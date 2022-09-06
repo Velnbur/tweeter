@@ -32,6 +32,7 @@ fn tweets(cfg: &Config, sender: &Sender<Tweet>) -> Router {
             post(handlers::tweets::create::handler).get(handlers::tweets::list::handler),
         )
         .route("/api/tweets/:id", get(handlers::tweets::by_id::handler))
+        .layer(Extension(cfg.storage.clone()))
         .layer(Extension(cfg.db.clone()))
         .layer(Extension(sender.clone()))
 }
