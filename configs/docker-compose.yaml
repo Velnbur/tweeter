@@ -1,29 +1,30 @@
 name: tweeter
 
 services:
+  frontend:
+    image: ghcr.io/velnbur/tweeter-frontend:master
+    depends_on:
+      - backend
+
   backend:
     image: ghcr.io/velnbur/tweeter-backend:master
-    # build:
-    #   context: ..
-    #   dockerfile: ./tweeter-backend/Dockerfile
-    environment:
-      - RUST_LOG=debug
     depends_on:
       - db
+      - storage
     volumes:
       - type: bind
         source: ./backend.toml
         target: /etc/config.yaml
         read_only: true
-    entrypoint: ["service", "--config", "/etc/config.yaml"]
+    entrypoint: ["service", "--config", "/etc/config.yaml", "--migrate"]
 
   db:
     image: postgres:12-alpine
     restart: always
     environment:
-      - POSTGRES_PASSWORD=test
-      - POSTGRES_USER=test
-      - POSTGRES_DB=test
+      - POSTGRES_PASSWORD=tweeter
+      - POSTGRES_USER=tweeter
+      - POSTGRES_DB=tweeter
     volumes:
       - db-data:/var/lib/postgresql/data
 
@@ -34,12 +35,9 @@ services:
     command: -c "mkdir -p /data/profile-images && minio server /data"
     environment:
       - MINIO_ACCESS_KEY=miniominio
-      - MINIO_SECRET_KEY=secretsecret
-      - MINIO_BROWSER=on
+      - MINIO_SECRET_KEY=tweetertweeter
     volumes:
       - storage-data:/data
-    ports:
-      - "9000:9000"
 
   proxy:
     image: nginx
@@ -52,6 +50,7 @@ services:
       - 8080:8080
     depends_on:
       - backend
+      - frontend
 
 volumes:
   db-data: {}

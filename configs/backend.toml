@@ -1,8 +1,8 @@
 [server]
-addr = "0.0.0.0:8000"
+addr = "0.0.0.0:80"
 
 [db]
-url = "postgresql://test:test@db:5432/test"
+url = "postgresql://tweeter:tweeter@db:5432/tweeter"
 
 [logger]
 level = "info"
