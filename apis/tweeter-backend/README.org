@@ -6,7 +6,7 @@ A main backend for tweeter application.
 
 *** Configuration
 
-See example of the project in [[/config.toml][config.toml]]
+See example of the project in [[/apis/tweeter-backend/config.toml][config.toml]]
 
 *** Starting the project
 
