@@ -13,8 +13,8 @@ wasm-logger = "0.2.0"
 const_format = "0.2.26"
 serde_json = { version = "1.0", features = ["std"] }
 
-tweeter-schemas = { path = "../tweeter-schemas", version = "0.1" }
-tweeter-models = { path = "../tweeter-models", version = "0.1" }
+tweeter-schemas = { path = "../../crates/tweeter-schemas", version = "0.1" }
+tweeter-models = { path = "../../crates/tweeter-models", version = "0.1" }
 
 yew = "0.19.3"
 yew-router = { version = "0.16.0" }

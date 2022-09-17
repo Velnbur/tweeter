@@ -1,0 +1,20 @@
+* tweeter-frontend
+
+A frontend application for tweeter project
+
+** Development
+
+For development you will need to install ~trunk~:
+#+begin_src shell
+cargo install trunk
+#+end_src
+
+We will also need to add the WASM build target by running:
+#+begin_src shell
+rustup target add wasm32-unknown-unknown
+#+end_src
+
+Then to start the project run:
+#+begin_src shell
+trunk serve --open --port 8001
+#+end_src

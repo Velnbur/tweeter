@@ -50,5 +50,5 @@ sha3 = "0.10.2"
 rust-s3 = { default-features = false, version = "0.32.3", features = [ "tokio-rustls-tls", "with-tokio" ] }
 
 # Internal dependecies
-tweeter-schemas = { path = "../tweeter-schemas", version = "0.1" }
-tweeter-models = { path = "../tweeter-models", version = "0.1", features = [ "sqlx" ] }
+tweeter-schemas = { path = "../../crates/tweeter-schemas", version = "0.1" }
+tweeter-models = { path = "../../crates/tweeter-models", version = "0.1", features = [ "sqlx" ] }
