@@ -4,8 +4,8 @@ on: [push]
 
 env:
   REGISTRY: ghcr.io
-  BACKEND_IMAGE_NAME: ${{ github.repository }}
-  #TODO: FRONTEND_IMAGE_NAME: tweeter-frontend
+  BACKEND_IMAGE_NAME: ${{ github.repository }}-backend
+  # TODO: FRONTEND_IMAGE_NAME: tweeter-frontend
 
 jobs:
   build-and-push-image-backend:
