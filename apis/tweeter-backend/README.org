@@ -1,128 +1,37 @@
 * tweeter-backend
-~tweeter-backend~ - is an example project of creating a small http service in Rust
-programming language using modern crate's for that like.
 
-** Important to mention dependencies
+A main backend for tweeter application.
 
-+ [[https://docs.rs/thiserror/latest/thiserror/][thiserror]] - a small crate for creating custom errors
-+ [[https://crates.io/crates/axum][axum]] - a powerful framework for creating [[https://www.techempower.com/benchmarks/#section=data-r21][fast]] async http servers
+** Development
 
-*** thiserror
+*** Configuration
 
-Gives an opportunity to easily declare custom error types as enums that can wrap
-other error types with custom messages.
+See example of the project in [[/config.toml][config.toml]]
 
-For example if you have a handler that calls three other functions that has
-three different errors, like: ~db:Error~, ~s3::Error~, ~auth:Error~, you may
-write something like this:
+*** Starting the project
 
-#+BEGIN_SRC rust
-use thiserror::Error;
+To start and application firstly initialize a DB. The easiest way to
+run a Postgres docker container:
+#+begin_src shell
+docker run --name tweeter-db \
+    -p 5432:5432 \
+    -e POSTGRES_USER=tweeter \
+    -e POSTGRES_DB=tweeter \
+    -e POSTGRES_PASSWORD=tweeter \
+    -d postgres
+#+end_src
 
-#[derive(Error, Debug)]
-pub enum HandlerError {
-    #[error("database failed: {0}")]
-    Database(#[from] db::Error),
-    #[error("s3 bucket failed: {0}")]
-    S3Bucket(#[from] s3::Error),
-    #[error("failed to authenticate: {0}")]
-    Auth(#[from] auth::Error),
-}
-#+END_SRC
+Then initialize a Minio container for profile pictures:
+#+begin_src shell
+docker run --name tweeter-s3 \
+    -p 9000:9000 \
+    -e MINIO_ACCESS_KEY=miniominio \
+    -e MINIO_SECRET_KEY=secretsecret \
+    -e MINIO_BROWSER=on \
+    -d minio/minio:RELEASE.2019-01-31T00-31-19Z
+#+end_src
 
-*** axum
-
-One of my most loved features in axum is an auto request parsing by using
-types that implement ~FromRequest<B>~ trait that frees you from writing
-boilerplate code like parsing url parameters, values in the headers
-and etc.
-
-For example, this is a handler from which axum will parse ~id~ from url,
-value from ~Authorization~ header, an optional query parameter and a
-will parse body as a JSON.
-
-#+BEGIN_SRC rust
-use serde::Deserialize;
-
-#[derive(Deserialize)]
-struct Pagination {
-    page: Option<usize>,
-    per_page: Option<usize>,
-}
-
-#[derive(Deserialize)]
-struct Body {
-    pub name: String,
-}
-
-async fn handler(
-    Path(id): Path(i32),
-    Authorization(token): Authorization<Bearer>,
-    Query(param): Query<Pagination>,
-    Json(body): Json<Body>,
-) -> Result<impl IntoResponse, impl IntoResponse> {
-    ...
-}
-#+END_SRC
-
-Another cool axum's design feature was an idea of the handler return type as
-a ~Result~ of two types that must implement ~IntoResponse~ trait that looks
-just like this:
-
-#+BEGIN_SRC rust
-pub trait IntoResponse {
-    fn into_response(self) -> Response;
-}
-#+END_SRC
-
-In most cases for /good/ response you will use embedded structures like
-~Json~ that will serialize inner structure into JSON as response body, but
-the /error/ one you may need to code a little (and you really need that).
-
-For example, lets use error from ~thiserror~ example (~StatusCode~ already
-implements ~IntoResponse~):
-
-#+BEGIN_SRC rust
-impl IntoResponse for HandlerError {
-    fn into_response(self) -> Response {
-        let code = match self {
-            Self::Auth => StatusCode::Unauthorized,
-            Self::Database | Self::S3Bucket
-                => StatusCode::InternalServerError,
-        };
-        code.into_response()
-    }
-}
-#+END_SRC
-
-That let's us to use beautiful ~?~ operator inside our handlers as it is,
-for anybody that didn't know ~?~ operator is just a shortcut for:
-
-#+BEGIN_SRC rust
-match thing {
-    Ok(value) => value,
-    Err(err) => return Err(err)
-}
-#+END_SRC
-
-So after this preparations this example of code from this:
-
-#+BEGIN_SRC rust
-let user = match auth::get_user() {
-    Ok(user) => user,
-    Err(err) => {
-        log::info!("failed to authorize: {err}");
-        return StatusCode::Unauthorized,
-    }
-};
-#+END_SRC
-
-May turn to this:
-
-#+BEGIN_SRC rust
-let user = auth::get_user()
-             .map_err(|err| {
-                 log::info("failed to authorize: {err}");
-                 HandlerError::Database(err)
-             })?;
-#+END_SRC
+And then you may run project by simple:
+#+begin_src shell
+cargo run
+#+end_src

@@ -1,0 +1,14 @@
+[server]
+addr = "0.0.0.0:8080"
+
+[db]
+url = "postgresql://tweeter:tweetert@localhost:5432/tweeter"
+
+[logger]
+level = "debug"
+
+[storage]
+endpoint = "http://localhost:9000"
+bucket = "profile-images"
+access_key = "miniominio"
+secret_key = "secretsecret"
