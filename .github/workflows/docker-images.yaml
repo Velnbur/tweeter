@@ -1,8 +1,6 @@
 name: Build docke images
 
-on:
-  push:
-    branches: ['master']
+on: [push]
 
 env:
   REGISTRY: ghcr.io
