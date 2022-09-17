@@ -2,10 +2,10 @@ name: tweeter
 
 services:
   backend:
-    image: velnbur/tweeter-backend:latest
-    build:
-      context: ..
-      dockerfile: ./tweeter-backend/Dockerfile
+    image: ghcr.io/velnbur/tweeter-backend:master
+    # build:
+    #   context: ..
+    #   dockerfile: ./tweeter-backend/Dockerfile
     environment:
       - RUST_LOG=debug
     depends_on:
