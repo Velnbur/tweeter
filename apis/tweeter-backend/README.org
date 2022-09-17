@@ -23,7 +23,7 @@ docker run --name tweeter-db \
 
 Then initialize a Minio container for profile pictures:
 #+begin_src shell
-docker run --name tweeter-s3 \
+docker run --name tweeter-bucket \
     -p 9000:9000 \
     -e MINIO_ACCESS_KEY=miniominio \
     -e MINIO_SECRET_KEY=secretsecret \
@@ -33,5 +33,5 @@ docker run --name tweeter-s3 \
 
 And then you may run project by simple:
 #+begin_src shell
-cargo run
+cargo run -- --config ./config.toml --migrate
 #+end_src
