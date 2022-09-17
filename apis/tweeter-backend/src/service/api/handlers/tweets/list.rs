@@ -10,11 +10,7 @@ use tweeter_schemas::{
 };
 
 use crate::{
-    records::{
-        errors::Errors,
-        tweets::TweetsRepo,
-        users::{self, UsersRepo},
-    },
+    records::{errors::Errors, tweets::TweetsRepo, users::UsersRepo},
     service::api::{errors::ErrorResponse, IMAGE_EXPR_SECS},
 };
 
