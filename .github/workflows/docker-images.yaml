@@ -1,14 +1,16 @@
 name: Build docker images
 
-on: [push]
+on:
+  push:
+  pull_request:
 
 env:
   REGISTRY: ghcr.io
   BACKEND_IMAGE_NAME: ${{ github.repository }}-backend
-  FRONTEND_IMAGE_NAME: ${{ github.repository }}-frontend
+  WEB_IMAGE_NAME: ${{ github.repository }}-web
 
 jobs:
-  build-and-push-image-backend:
+  image-backend:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -40,7 +42,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  build-and-push-image-frontend:
+  image-web:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -61,13 +63,13 @@ jobs:
         id: meta
         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
         with:
-          images: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
           context: .
-          file: ./apps/tweeter-frontend/Dockerfile
+          file: ./apps/tweeter-web/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

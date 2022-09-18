@@ -1,5 +1,5 @@
 [package]
-name = "tweeter-frontend"
+name = "tweeter-web"
 authors = ["Velnbur"]
 version = "0.1.0"
 edition = "2021"
