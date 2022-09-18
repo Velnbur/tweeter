@@ -1,108 +1,130 @@
-pub mod craber;
+use std::time::{SystemTime, SystemTimeError, UNIX_EPOCH};
 
-use ecdsa::signature::Verifier;
-use elliptic_curve::rand_core::OsRng;
-use k256::ecdsa::{Signature, SigningKey, VerifyingKey};
-
-pub fn generate_keys() -> (String, String) {
-    let keys = SigningKey::random(&mut OsRng);
-
-    (
-        bs58::encode(keys.to_bytes()).into_string(),
-        bs58::encode(keys.verifying_key().to_bytes()).into_string(),
-    )
-}
-
+use axum::{
+    async_trait,
+    extract::{FromRequest, RequestParts},
+    headers::{authorization::Credentials, Authorization},
+    response::IntoResponse,
+    TypedHeader,
+};
 use thiserror::Error;
-use tweeter_models::tweet::Tweet;
+use tweeter_auth::verify_signature;
+
+use crate::service::api::errors::ErrorResponse;
 
 #[derive(Error, Debug)]
-pub enum VerifyError {
-    #[error("failed to decode: {0}")]
-    DecodeError(#[from] bs58::decode::Error),
-    #[error("failed to verify: {0}")]
-    VerifyingError(#[from] signature::Error),
+pub enum AuthError {
+    #[error("invalid token")]
+    InvalidToken,
+    #[error("timestamp is old")]
+    InvalidTimestamp,
+    #[error("failed to get current time: {0}")]
+    TimeError(#[from] SystemTimeError),
 }
 
-pub fn verify_signature(msg: &String, sign: &String, pub_key: &String) -> Result<(), VerifyError> {
-    let decoded_bytes = bs58::decode(pub_key).into_vec()?;
-
-    let key = VerifyingKey::from_sec1_bytes(&decoded_bytes.as_slice())?;
-
-    let sign = Signature::from_der(&bs58::decode(sign).into_vec()?)?;
-
-    key.verify(msg.as_bytes(), &sign)
-        .map_err(VerifyError::VerifyingError)
-}
-
-pub fn verify_tweet(tweet: &Tweet) -> Result<(), VerifyError> {
-    let mut msg = String::new();
-
-    msg.push_str(&tweet.text.to_owned());
-    msg.push('\n');
-    msg.push_str(&tweet.timestamp.to_string());
-    msg.push('\n');
-    msg.push_str(&tweet.user_id.to_owned());
-
-    verify_signature(&msg, &tweet.signature, &tweet.user_id)
-}
-
-#[cfg(test)]
-mod test {
-    use k256::ecdsa::{Signature, SigningKey};
-    use signature::Signer;
-    use tweeter_models::tweet::Tweet;
-
-    use super::{generate_keys, verify_signature, verify_tweet};
-
-    #[test]
-    fn test_verify_signature() {
-        let (priv_key, pub_key) = generate_keys();
-
-        let sign_key =
-            SigningKey::from_bytes(bs58::decode(priv_key).into_vec().unwrap().as_slice()).unwrap();
-
-        let msg = "hello, world";
-        let sign: Signature = sign_key.sign(msg.as_bytes());
-
-        verify_signature(
-            &msg.to_string(),
-            &bs58::encode(sign.to_der()).into_string(),
-            &pub_key,
-        )
-        .unwrap();
+impl IntoResponse for AuthError {
+    fn into_response(self) -> axum::response::Response {
+        let resp = match self {
+            Self::InvalidToken | Self::InvalidTimestamp => {
+                ErrorResponse::BadRequest(self.to_string())
+            }
+            AuthError::TimeError(err) => {
+                log::error!("Failed to get current time: {err}");
+                ErrorResponse::InternalError
+            }
+        };
+        resp.into_response()
     }
+}
 
-    #[test]
-    fn test_verify_tweet() {
-        let (priv_key, pub_key) = generate_keys();
+pub struct Claims {
+    pub pub_key: String,
+    timestamp: u64,
+    signature: String,
+}
 
-        let sign_key =
-            SigningKey::from_bytes(bs58::decode(priv_key).into_vec().unwrap().as_slice()).unwrap();
+impl Claims {
+    const INTERVAL: u64 = 60 * 5;
 
-        let text = "title";
-        let timestamp = 123123;
+    pub fn verify(&self) -> Result<(), AuthError> {
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_err(AuthError::TimeError)?;
+
+        if now.as_secs() - self.timestamp > Self::INTERVAL {
+            return Err(AuthError::InvalidTimestamp);
+        }
 
         let mut msg = String::new();
 
-        msg.push_str(&text.to_owned());
-        msg.push('\n');
-        msg.push_str(&timestamp.to_string());
-        msg.push('\n');
-        msg.push_str(&pub_key.to_owned());
+        msg.push_str(self.timestamp.to_string().as_str());
+        msg.push('.');
+        msg.push_str(self.pub_key.as_str());
 
-        let sign: Signature = sign_key.sign(msg.as_bytes());
+        verify_signature(&msg, &self.signature, &self.pub_key).map_err(|_| AuthError::InvalidToken)
+    }
+}
 
-        let tweet = Tweet {
-            id: 0,
-            text: text.to_string(),
-            timestamp,
-            user_id: pub_key.clone(),
-            signature: bs58::encode(sign.to_der()).into_string(),
-            hash: None,
-            previous_id: None,
+#[async_trait]
+impl<B> FromRequest<B> for Claims
+where
+    B: Send,
+{
+    type Rejection = AuthError;
+
+    async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
+        let TypedHeader(Authorization(craber)) =
+            TypedHeader::<Authorization<Craber>>::from_request(req)
+                .await
+                .map_err(|_| AuthError::InvalidToken)?;
+
+        let claims = Claims::try_from(craber)?;
+
+        claims.verify()?;
+
+        Ok(claims)
+    }
+}
+
+impl TryFrom<Craber> for Claims {
+    type Error = AuthError;
+
+    fn try_from(value: Craber) -> Result<Self, Self::Error> {
+        let mut parts = value.0.splitn(3, '.');
+
+        let timestamp = parts.next().ok_or(AuthError::InvalidToken)?;
+        let pub_key = parts.next().ok_or(AuthError::InvalidToken)?;
+        let signature = parts.next().ok_or(AuthError::InvalidToken)?;
+
+        Ok(Self {
+            timestamp: timestamp.parse().map_err(|_| AuthError::InvalidToken)?,
+            pub_key: pub_key.to_string(),
+            signature: signature.to_string(),
+        })
+    }
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub struct Craber(pub String);
+
+impl Credentials for Craber {
+    const SCHEME: &'static str = "Craber";
+
+    fn decode(value: &axum::http::HeaderValue) -> Option<Self> {
+        if value.is_empty() {
+            return None;
+        }
+        let inner = match value.to_str() {
+            Ok(v) => v,
+            Err(_) => return None,
         };
+        if inner.len() < Self::SCHEME.len() + 1 {
+            return None;
+        }
+        Some(Self(String::from(&inner[Self::SCHEME.len() + 1..])))
+    }
 
-        verify_tweet(&tweet).unwrap();
+    fn encode(&self) -> axum::http::HeaderValue {
+        todo!()
     }
 }

@@ -2,7 +2,7 @@
 addr = "0.0.0.0:8080"
 
 [db]
-url = "postgresql://tweeter:tweetert@localhost:5432/tweeter"
+url = "postgresql://tweeter:tweeter@localhost:5432/tweeter"
 
 [logger]
 level = "debug"
