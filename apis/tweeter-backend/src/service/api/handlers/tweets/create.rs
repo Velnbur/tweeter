@@ -1,14 +1,12 @@
 use axum::{Extension, Json};
 use tokio::sync::mpsc::Sender;
+use tweeter_auth::verify_tweet;
 use tweeter_models::tweet::Tweet as TweetModel;
 use tweeter_schemas::tweets::{CreateTweetRequest, TweetResponse};
 
 use crate::{
     records::{errors::Errors as RecordErrors, tweets::TweetsRepo, users::UsersRepo},
-    service::api::{
-        auth::{self, craber::Claims},
-        errors::ErrorResponse,
-    },
+    service::api::{auth::Claims, errors::ErrorResponse},
 };
 
 pub async fn handler(
@@ -33,7 +31,7 @@ pub async fn handler(
 
     tweet.user_id = user.public_key;
 
-    auth::verify_tweet(&tweet).map_err(|err| {
+    verify_tweet(&tweet).map_err(|err| {
         log::info!("Failed to verify signature: {err}");
         ErrorResponse::Forbidden(err.to_string())
     })?;

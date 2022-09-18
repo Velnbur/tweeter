@@ -1,11 +1,9 @@
 use axum::{response::IntoResponse, Extension, Json};
+use tweeter_auth::generate_keys;
 use tweeter_models::user::User as UserModel;
 use tweeter_schemas::{auth_keys::AuthKeysResponse, users::CreateUserRequest};
 
-use crate::{
-    records::users::UsersRepo,
-    service::api::{auth, errors::ErrorResponse},
-};
+use crate::{records::users::UsersRepo, service::api::errors::ErrorResponse};
 
 pub async fn handler(
     Json(body): Json<CreateUserRequest>,
@@ -13,7 +11,7 @@ pub async fn handler(
 ) -> Result<impl IntoResponse, ErrorResponse> {
     let mut user: UserModel = body.into();
 
-    let (priv_key, pub_key) = auth::generate_keys();
+    let (priv_key, pub_key) = generate_keys();
 
     user.public_key = pub_key;
 

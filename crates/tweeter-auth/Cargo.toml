@@ -1,0 +1,20 @@
+[package]
+name = "tweeter-auth"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# For error creation
+thiserror = "1.0.31"
+
+# signature
+signature = { version = "1.5.0", features = ["std"] }
+ecdsa = { version = "0.14.3", features = ["verify", "sign"] }
+k256 = { version = "0.11.3", features = ["ecdsa", "sha256"] }
+elliptic-curve = "0.12.3"
+
+# other
+rand = "0.8.5"
+bs58 = "0.4.0"
+
+tweeter-models = { path = "../tweeter-models", version = "0.1" }
