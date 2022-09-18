@@ -10,7 +10,7 @@ env:
   WEB_IMAGE_NAME: ${{ github.repository }}-web
 
 jobs:
-  build-and-push-image-backend:
+  image-backend:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -42,7 +42,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  build-and-push-image-frontend:
+  image-web:
     runs-on: ubuntu-latest
     permissions:
       contents: read
