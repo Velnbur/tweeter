@@ -2129,6 +2129,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "59547bce71d9c38b83d9c0e92b6066c4253371f15005def0c30d9657f50c7642"
 
 [[package]]
+name = "tweeter-auth"
+version = "0.1.0"
+dependencies = [
+ "bs58",
+ "ecdsa",
+ "elliptic-curve",
+ "k256",
+ "rand",
+ "signature",
+ "thiserror",
+ "tweeter-models",
+]
+
+[[package]]
 name = "tweeter-backend"
 version = "0.1.0"
 dependencies = [
@@ -2151,12 +2165,29 @@ dependencies = [
  "thiserror",
  "tokio",
  "toml",
+ "tweeter-auth",
  "tweeter-models",
  "tweeter-schemas",
 ]
 
 [[package]]
-name = "tweeter-frontend"
+name = "tweeter-models"
+version = "0.1.0"
+dependencies = [
+ "sqlx",
+]
+
+[[package]]
+name = "tweeter-schemas"
+version = "0.1.0"
+dependencies = [
+ "http",
+ "serde",
+ "tweeter-models",
+]
+
+[[package]]
+name = "tweeter-web"
 version = "0.1.0"
 dependencies = [
  "const_format",
@@ -2174,22 +2205,6 @@ dependencies = [
  "web-sys",
  "yew",
  "yew-router",
-]
-
-[[package]]
-name = "tweeter-models"
-version = "0.1.0"
-dependencies = [
- "sqlx",
-]
-
-[[package]]
-name = "tweeter-schemas"
-version = "0.1.0"
-dependencies = [
- "http",
- "serde",
- "tweeter-models",
 ]
 
 [[package]]
