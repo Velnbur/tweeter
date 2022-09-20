@@ -7,6 +7,8 @@ use super::key::Key;
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CreateUserAttributes {
     pub username: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub public_key: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -20,7 +22,20 @@ impl CreateUser {
     pub fn new(username: String) -> Self {
         Self {
             _type: ResourceType::User,
-            attributes: CreateUserAttributes { username },
+            attributes: CreateUserAttributes {
+                username,
+                public_key: None,
+            },
+        }
+    }
+
+    pub fn with_key(self, key: String) -> Self {
+        Self {
+            _type: ResourceType::User,
+            attributes: CreateUserAttributes {
+                public_key: Some(key),
+                ..self.attributes
+            },
         }
     }
 }
@@ -53,8 +68,9 @@ use tweeter_models::user::User as UserModel;
 
 impl Into<UserModel> for CreateUserRequest {
     fn into(self) -> UserModel {
+        let public_key = self.data.attributes.public_key.unwrap_or_default();
         UserModel {
-            public_key: String::new(),
+            public_key,
             username: self.data.attributes.username,
             image_url: None,
         }
