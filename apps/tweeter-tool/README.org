@@ -2,6 +2,12 @@
 
 A small CLI tool for doing some ordinary tasks for tweet project.
 
+** Installation
+
+#+begin_src shell
+$ cargo install --path .
+#+end_src
+
 ** Possibilities
 
 For now it can:
@@ -9,3 +15,27 @@ For now it can:
 + Generate a pair of keys for tweeter project
 + Create a ~craber~ token from pair of keys
 + Create a JSON schema request with signed tweet inside it
+
+** Usage
+
+For now, there are two ways to interact with it:
+
++ Use interactive CLI interface
++ Use flags and commands
+
+For example, to create ~craber~ token:
+
+#+begin_src shell
+$ tweeter-tool --stdin create-token
+Enter private key:
+********************************************
+Enter public key:
+zdEoFFsZrmtU1zFmxmZg8sSH4Y5xsrkgqkWfUUxHoNYo
+Finish!
+Craber token: 1663657822.zdEoFFsZrmtU1zFmxmZg8sSH4Y5xsrkgqkWfUUxHoNYo.381yXYk7wWVteWzzPSLdYMKQJXxiVK9vPUVgMV9GZyZak7ujXKBWoBvSQDVQwUAJqMcF612q4JWPAEBuAKGkNZkDkyghTMvC
+#+end_src
+
+#+begin_src shell
+$ tweeter-tool --public-key zdEoFFsZrmtU1zFmxmZg8sSH4Y5xsrkgqkWfUUxHoNYo --private-key **************************** create-token
+1663657675.zdEoFFsZrmtU1zFmxmZg8sSH4Y5xsrkgqkWfUUxHoNYo.381yXYrWyD518fegQhsfp6QmbfreqQD59hGeNL7XzPsqrUsb33PeB4LMwFbzP97XC1U5teb5vXmWF9fKK74wzRgZxrwiNJoP
+#+end_src

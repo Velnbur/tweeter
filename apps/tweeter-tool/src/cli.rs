@@ -9,6 +9,7 @@ struct Args {
     #[clap(subcommand)]
     command: Commands,
 
+    /// Enter data (public_key, private_key and etc) through stdin
     #[clap(long)]
     stdin: bool,
 
