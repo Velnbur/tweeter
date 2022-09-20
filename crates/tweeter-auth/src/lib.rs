@@ -1,3 +1,5 @@
+pub mod token;
+
 use ecdsa::signature::Signer;
 use ecdsa::signature::Verifier;
 use elliptic_curve::rand_core::OsRng;
@@ -23,7 +25,9 @@ pub enum Error {
     SignatureError(#[from] signature::Error),
 }
 
-pub fn verify_signature(msg: &String, sign: &String, pub_key: &String) -> Result<(), Error> {
+type Result<T> = std::result::Result<T, Error>;
+
+pub fn verify_signature(msg: &String, sign: &String, pub_key: &String) -> Result<()> {
     let decoded_bytes = bs58::decode(pub_key).into_vec()?;
 
     let key = VerifyingKey::from_sec1_bytes(&decoded_bytes.as_slice())?;
@@ -34,7 +38,7 @@ pub fn verify_signature(msg: &String, sign: &String, pub_key: &String) -> Result
         .map_err(Error::SignatureError)
 }
 
-pub fn sign_msg(msg: &String, priv_key: &String) -> Result<String, Error> {
+pub fn sign_msg(msg: &String, priv_key: &String) -> Result<String> {
     let decoded_bytes = bs58::decode(priv_key).into_vec()?;
 
     let key = SigningKey::from_bytes(&decoded_bytes)?;
@@ -59,13 +63,13 @@ fn tweet_to_msg(tweet: &Tweet) -> String {
     msg
 }
 
-pub fn verify_tweet(tweet: &Tweet) -> Result<(), Error> {
+pub fn verify_tweet(tweet: &Tweet) -> Result<()> {
     let msg = tweet_to_msg(tweet);
 
     verify_signature(&msg, &tweet.signature, &tweet.user_id)
 }
 
-pub fn sign_tweet(tweet: Tweet, key: &String) -> Result<Tweet, Error> {
+pub fn sign_tweet(tweet: Tweet, key: &String) -> Result<Tweet> {
     let msg = tweet_to_msg(&tweet);
 
     let signature = sign_msg(&msg, key)?;

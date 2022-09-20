@@ -1,9 +1,6 @@
-use std::{
-    io::stdin,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::io::stdin;
 
-use tweeter_auth::sign_msg;
+use tweeter_auth::token::create_token_now;
 
 enum State {
     PrivateKey,
@@ -47,8 +44,6 @@ impl Reader {
     }
 }
 
-const DELIMITER_SYMBOL: char = '.';
-
 pub fn create_token() {
     let mut reader = Reader::new();
     let mut input = String::new();
@@ -56,6 +51,7 @@ pub fn create_token() {
     loop {
         stdin()
             .read_line(&mut input)
+            // TODO:
             .expect("Did not enter a correct string");
 
         input.pop();
@@ -67,21 +63,8 @@ pub fn create_token() {
 
     let (priv_key, pub_key) = reader.finish();
 
-    let mut msg = String::new();
+    // TODO:
+    let token = create_token_now(&pub_key, &priv_key).expect("failed to create token");
 
-    let timestamp = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("failed to get current time")
-        .as_secs();
-
-    msg.push_str(&timestamp.to_string());
-    msg.push(DELIMITER_SYMBOL);
-    msg.push_str(pub_key.as_str());
-
-    let signature = sign_msg(&msg, &priv_key).expect("failed to sign message");
-
-    msg.push(DELIMITER_SYMBOL);
-    msg.push_str(signature.as_str());
-
-    println!("Craber token: {}", msg);
+    println!("Craber token: {}", token);
 }

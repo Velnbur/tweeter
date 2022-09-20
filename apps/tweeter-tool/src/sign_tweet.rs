@@ -13,7 +13,7 @@ enum State {
 }
 
 #[derive(Debug)]
-pub struct Reader {
+struct Reader {
     tweet: Tweet,
     priv_key: String,
     state: State,
@@ -58,8 +58,6 @@ impl Reader {
             .expect("failed to get current time")
             .as_secs();
 
-        dbg!(&self);
-
         let tweet = Tweet {
             timestamp: (timestamp as i32),
             ..self.tweet
@@ -78,7 +76,7 @@ pub fn sing_tweet() {
             .read_line(&mut input)
             .expect("Did not enter a correct string");
 
-        input.pop();
+        input.pop(); // remove '\n' from the end of the line
         if reader.next(input.clone()) {
             break;
         }
