@@ -75,7 +75,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-    image-web:
+  image-tool:
     runs-on: ubuntu-latest
     permissions:
       contents: read
