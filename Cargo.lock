@@ -2187,6 +2187,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "tweeter-tool"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "serde_json",
+ "tweeter-auth",
+ "tweeter-models",
+ "tweeter-schemas",
+]
+
+[[package]]
 name = "tweeter-web"
 version = "0.1.0"
 dependencies = [

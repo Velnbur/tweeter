@@ -1,0 +1,12 @@
+[package]
+name = "tweeter-tool"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde_json = "1.0"
+clap = { version = "3.0.0", features = ["derive"] }
+
+tweeter-auth = { path = "../../crates/tweeter-auth", version = "0.1.0" }
+tweeter-models = { path = "../../crates/tweeter-models", version = "0.1.0" }
+tweeter-schemas = { path = "../../crates/tweeter-schemas", version = "0.1.0" }
