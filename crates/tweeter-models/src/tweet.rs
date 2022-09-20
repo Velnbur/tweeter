@@ -9,3 +9,17 @@ pub struct Tweet {
     pub hash: Option<String>,
     pub previous_id: Option<i64>,
 }
+
+impl Default for Tweet {
+    fn default() -> Self {
+        Self {
+            id: Default::default(),
+            text: Default::default(),
+            timestamp: Default::default(),
+            user_id: Default::default(),
+            signature: Default::default(),
+            hash: Default::default(),
+            previous_id: Default::default(),
+        }
+    }
+}

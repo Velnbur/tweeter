@@ -2,6 +2,7 @@
 members = [
     "apis/tweeter-backend",
     "apps/tweeter-web",
+    "apps/tweeter-tool",
     "crates/tweeter-schemas",
     "crates/tweeter-models",
     "crates/tweeter-auth"
