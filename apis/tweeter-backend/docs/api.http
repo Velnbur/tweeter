@@ -1,0 +1,25 @@
+# Main config
+
+:host = localhost:80
+## will be used later
+:private-key
+:public-key
+
+
+# Generate a pair of keys for new user
+:username = Velnbur
+
+POST http://:host/api/auth/register
+-> jq-set-var :private-key .data.attributes.private_key
+-> jq-set-var :public-key .data.attributes.public_key
+
+Content-Type: application/json
+
+{
+    "data": {
+        "type": "user",
+        "attributes": {
+            "username": ":username"
+        }
+    }
+}

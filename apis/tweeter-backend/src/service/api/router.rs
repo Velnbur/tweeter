@@ -22,6 +22,10 @@ fn auth(cfg: &Config) -> Router {
             "/api/auth/register",
             post(handlers::auth::register::handler),
         )
+        .route(
+            "/api/auth/register/key",
+            post(handlers::auth::register_keys::handler),
+        )
         .layer(Extension(cfg.db.clone()))
 }
 
