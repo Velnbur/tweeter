@@ -45,7 +45,7 @@ fn app() -> Html {
                     </ul>
                 </div>
             </nav>
-            <div class="container main">
+            <div class="container">
                 <BrowserRouter>
                     <Switch<Route> render={Switch::render(switch)} />
                 </BrowserRouter>
