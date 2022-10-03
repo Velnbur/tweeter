@@ -1,19 +1,18 @@
 # Main config
 
 :host = localhost:80
+
 ## will be used later
 :private-key
 :public-key
-
 
 # Generate a pair of keys for new user
 :username = Velnbur
 
 POST http://:host/api/auth/register
+Content-Type: application/json
 -> jq-set-var :private-key .data.attributes.private_key
 -> jq-set-var :public-key .data.attributes.public_key
-
-Content-Type: application/json
 
 {
     "data": {
@@ -23,3 +22,34 @@ Content-Type: application/json
         }
     }
 }
+
+
+# Create new tweet
+
+## A token used for authorization
+:craber-token = <<
+(shell-command-to-string
+    (format "tweeter-tool --private-key %s --public-key %s create-token"
+            (restclient-get-var :private-key)
+            (restclient-get-var :public-key))
+#
+
+POST http://:host/api/tweets
+Content-Type: application/json
+Authorization: Craber :craber-token
+
+{
+    "data": {
+        "type":"tweet",
+        "attributes":{
+            "text":"some lomg text of the tweet can be placed in here. if you want",
+            "timestamp":1664830781,
+            "signature":"UsPSNsJ2ZAzH9ExofcHQnJuski3VEMzyirBM4jkX4kbhtU3iowdHbCwtJwQfsbvuFCV6JZ68LjW2Ptm24QB1DJi8fHhYDB"
+        }
+    }
+}
+
+
+
+# "private_key": 6"Pb1DL2dsuFcUXyZSEWNCX1bT734sxdtUUKbDVsDZHob",
+# "public_key": "tofWFQCc94YxL3eDeFkZY4eXd1GJwg121DZFyCKbzqKN"
