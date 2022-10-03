@@ -25,6 +25,8 @@ sea-query = { version = "^0", features = ["sqlx-postgres", "postgres"] }
 ## database driver
 sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "postgres"] }
 
+validator = { version = "0.16", features = ["derive"] }
+
 # Config parsing
 toml = "0.5.9"
 

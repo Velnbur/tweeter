@@ -1,6 +1,7 @@
 use axum::{response::IntoResponse, Extension, Json};
 use tweeter_models::user::User as UserModel;
 use tweeter_schemas::users::{CreateUserRequest, UserResponse};
+use validator::Validate;
 
 use crate::{records::users::UsersRepo, service::api::errors::ErrorResponse};
 
@@ -8,9 +9,10 @@ pub async fn handler(
     Json(body): Json<CreateUserRequest>,
     Extension(pool): Extension<sqlx::PgPool>,
 ) -> Result<impl IntoResponse, ErrorResponse> {
-    let user: UserModel = body.into();
+    body.validate()
+        .map_err(|err| ErrorResponse::BadRequest(err.to_string()))?;
 
-    // TODO: add validation here
+    let user: UserModel = body.into();
 
     let user = UsersRepo::new(&pool)
         .insert(user)

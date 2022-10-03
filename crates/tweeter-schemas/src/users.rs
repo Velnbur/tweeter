@@ -1,20 +1,33 @@
 use serde::{Deserialize, Serialize};
+use validator::{Validate, ValidationError};
 
 use super::resource_type::ResourceType;
 
 use super::key::Key;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Validate, Serialize, Deserialize, Clone)]
 pub struct CreateUserAttributes {
+    #[validate(length(min = 3, max = 32))]
     pub username: String,
+    #[validate(length(equal = 45))]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub public_key: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+fn validate_user_type(res: &ResourceType) -> Result<(), ValidationError> {
+    if *res == ResourceType::User {
+        return Ok(());
+    }
+
+    Err(ValidationError::new("invalid resource type"))
+}
+
+#[derive(Debug, Validate, Serialize, Deserialize, Clone)]
 pub struct CreateUser {
+    #[validate(custom = "validate_user_type")]
     #[serde(rename = "type")]
     pub _type: ResourceType,
+    #[validate]
     pub attributes: CreateUserAttributes,
 }
 
@@ -40,8 +53,9 @@ impl CreateUser {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Validate)]
 pub struct CreateUserRequest {
+    #[validate]
     pub data: CreateUser,
 }
 
