@@ -1,6 +1,9 @@
 use std::num::ParseIntError;
 
+use lazy_static::lazy_static;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
+use validator::{Validate, ValidationError};
 
 use crate::include::Include;
 use crate::users::{User, UserAttributes};
@@ -8,6 +11,11 @@ use crate::users::{User, UserAttributes};
 use super::key::Key;
 use super::relation::Relation;
 use super::resource_type::ResourceType;
+
+lazy_static! {
+    // Regex for base 58 encoded sequeance of bytes
+    static ref RE_BS58: Regex = Regex::new(r"[0-9A-Za-z&&[^0OIl]]").unwrap();
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TweetAttributes {
@@ -47,17 +55,29 @@ pub struct TweetListResponse {
     pub include: Option<Vec<User>>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Validate)]
 pub struct CreateTweetAttributes {
+    #[validate(length(max = 256, min = 20))]
     pub text: String,
     pub timestamp: i32,
+    #[validate(regex = "RE_BS58")]
     pub signature: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+fn validate_tweet_type(res: &ResourceType) -> Result<(), ValidationError> {
+    if *res == ResourceType::Tweet {
+        return Ok(());
+    }
+
+    Err(ValidationError::new("must be `tweet` resource type"))
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Validate)]
 pub struct CreateTweet {
+    #[validate(custom = "validate_tweet_type")]
     #[serde(rename = "type")]
     _type: ResourceType,
+    #[validate]
     pub attributes: CreateTweetAttributes,
 }
 
@@ -74,8 +94,9 @@ impl CreateTweet {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Validate)]
 pub struct CreateTweetRequest {
+    #[validate]
     pub data: CreateTweet,
 }
 
