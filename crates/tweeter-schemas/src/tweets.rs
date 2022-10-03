@@ -14,7 +14,7 @@ use super::resource_type::ResourceType;
 
 lazy_static! {
     // Regex for base 58 encoded sequeance of bytes
-    static ref RE_BS58: Regex = Regex::new(r"[0-9A-Za-z&&[^0OIl]]").unwrap();
+    static ref RE_BS58: Regex = Regex::new(r"[0-9A-Za-z]").unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
