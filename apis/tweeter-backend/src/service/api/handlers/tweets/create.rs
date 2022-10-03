@@ -3,6 +3,7 @@ use tokio::sync::mpsc::Sender;
 use tweeter_auth::verify_tweet;
 use tweeter_models::tweet::Tweet as TweetModel;
 use tweeter_schemas::tweets::{CreateTweetRequest, TweetResponse};
+use validator::Validate;
 
 use crate::{
     records::{errors::Errors as RecordErrors, tweets::TweetsRepo, users::UsersRepo},
@@ -15,6 +16,9 @@ pub async fn handler(
     Extension(pool): Extension<sqlx::PgPool>,
     Extension(chan): Extension<Sender<TweetModel>>,
 ) -> Result<Json<TweetResponse>, ErrorResponse> {
+    body.validate()
+        .map_err(|err| ErrorResponse::BadRequest(err.to_string()))?;
+
     let user = UsersRepo::new(&pool)
         .where_pub_key(claims.pub_key)
         .get()

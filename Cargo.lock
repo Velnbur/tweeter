@@ -2200,6 +2200,7 @@ dependencies = [
  "tweeter-auth",
  "tweeter-models",
  "tweeter-schemas",
+ "validator",
 ]
 
 [[package]]
