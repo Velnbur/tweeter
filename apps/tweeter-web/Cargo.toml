@@ -22,6 +22,8 @@ wasm-bindgen = { version = "0.2", features = ["serde-serialize", "std"] }
 wasm-bindgen-futures = "0.4"
 gloo-utils = "0.1"
 
+yewdux = "0.8.2"
+
 url = { version = "2.2.2", features = ["serde"] }
 serde_qs = "0.10.1"
 

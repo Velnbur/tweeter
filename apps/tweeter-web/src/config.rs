@@ -5,4 +5,6 @@ pub const API_BASE_URL: &'static str = "http://localhost:80";
 pub const API_TWEETS_URL: &'static str = concatcp!(API_BASE_URL, "/api/tweets");
 pub const API_USERS_URL: &'static str = concatcp!(API_BASE_URL, "/api/users");
 
+pub const API_REGISTER: &'static str = concatcp!(API_BASE_URL, "/api/auth/register");
+
 pub const DEFAULT_PROFILE_PICTURE: &'static str = "/img/profile-picture.png";
