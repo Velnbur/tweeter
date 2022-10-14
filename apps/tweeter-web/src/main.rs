@@ -8,6 +8,7 @@ use yew::prelude::*;
 use yew_router::prelude::*;
 
 use components::navbar::Navbar;
+use components::Footer;
 use pages::list::List;
 use pages::register::Register;
 use pages::tweet::Tweet;
@@ -17,21 +18,23 @@ use pages::user::User;
 enum Route {
     #[at("/")]
     Home,
-    #[at("/list ")]
+    #[at("/list")]
     List,
+    #[at("/register")]
+    Register,
     #[at("/tweet/:id")]
     Tweet { id: i64 },
     #[at("/user/:pub_key")]
     User { pub_key: String },
-    #[at("/register")]
-    Register,
 }
 
 fn switch(routes: &Route) -> Html {
     match routes {
         Route::Home => html! {}, // FIXME:
         Route::List => html! { <List /> },
-        Route::Tweet { id } => html! { <Tweet tweet_id={ id.clone() } /> },
+        Route::Tweet { id } => html! {
+            <Tweet tweet_id={ id.clone() } />
+        },
         Route::User { pub_key } => html! {
             <User user_id={ pub_key.clone() } />
         },
@@ -42,7 +45,7 @@ fn switch(routes: &Route) -> Html {
 #[function_component(Main)]
 fn app() -> Html {
     html! {
-      <div class="containter">
+      <div>
         <Navbar />
 
         <div class="container p-3">
@@ -60,6 +63,8 @@ fn app() -> Html {
             </div>
           </div>
         </div>
+
+        <Footer />
       </div>
     }
 }

@@ -1,6 +1,14 @@
+use tweeter_schemas::{auth_keys::AuthKeysResponse, users::UserResponse};
 use yew::prelude::*;
+use yewdux::prelude::use_store;
 
-pub enum Tab {
+use crate::components::buttons::{LoadingButton, SubmitButton};
+use crate::components::form::InputText;
+use crate::components::tabs::{Tab, TabGroup};
+use crate::states::UserState;
+
+#[derive(Clone, PartialEq)]
+pub enum Tabs {
     GenerateKeys,
     RegisterKeys,
 }
@@ -38,15 +46,25 @@ impl FormContent {
 }
 
 pub struct Register {
-    current_tab: Tab,
+    current_tab: Tabs,
     username: String,
     public_key: String,
     private_key: String,
+    state: State,
+}
+
+#[derive(Clone)]
+pub enum State {
+    Input,
+    Send,
+    SuccessGenerateKeys(AuthKeysResponse),
+    SuccessRegister(UserResponse),
 }
 
 pub enum Msg {
-    SwitchTab(Tab),
+    SwitchTab(Tabs),
     UpdateContent(FormContent),
+    UpdateState(State),
 }
 
 impl Component for Register {
@@ -55,48 +73,11 @@ impl Component for Register {
 
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
-            current_tab: Tab::GenerateKeys,
+            current_tab: Tabs::GenerateKeys,
             username: String::default(),
             public_key: String::default(),
             private_key: String::default(),
-        }
-    }
-
-    fn view(&self, ctx: &Context<Self>) -> Html {
-        let generate_keys_active = match self.current_tab {
-            Tab::GenerateKeys => Some("active"),
-            Tab::RegisterKeys => None,
-        };
-        let add_existing_active = match self.current_tab {
-            Tab::GenerateKeys => None,
-            Tab::RegisterKeys => Some("active"),
-        };
-        html! {
-          <>
-            <h1> {"Register new account"} </h1>
-            <div class="btn-group" role="group">
-              <button
-               type="button"
-               class={classes!("btn", "btn-primary", generate_keys_active)}
-               onclick={ctx.link().callback(|_| Msg::SwitchTab(Tab::GenerateKeys))}
-              >
-                { "Generate keys" }
-              </button>
-              <button
-               type="button"
-               class={classes!("btn", "btn-primary", add_existing_active)}
-               onclick={ctx.link().callback(|_| Msg::SwitchTab(Tab::RegisterKeys))}
-              >
-                { "Register existing keys" }
-              </button>
-            </div>
-          {
-            match self.current_tab {
-                Tab::GenerateKeys => self.view_generate_keys_tab(ctx),
-                Tab::RegisterKeys => self.view_add_existing_keys_tab(ctx),
-            }
-          }
-          </>
+            state: State::Input,
         }
     }
 
@@ -126,6 +107,57 @@ impl Component for Register {
 
                 update
             }
+            Msg::UpdateState(state) => match &state {
+                State::Input => {
+                    self.state = state;
+                    false
+                }
+                State::Send => {
+                    self.state = state;
+                    true
+                }
+                State::SuccessGenerateKeys(resp) => {
+                    self.state = state.clone();
+
+                    let (_, dispatch) = use_store::<UserState>();
+                    dispatch.set(UserState::from_auth_keys(resp.clone()));
+
+                    self.private_key = resp.data.attributes.private_key.clone();
+                    self.public_key = resp.data.attributes.public_key.clone();
+                    true
+                }
+                State::SuccessRegister(_) => todo!(),
+            },
+        }
+    }
+
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        html! {
+            <>
+                <h1>{ "Register new account" }</h1>
+                <TabGroup<Tabs>
+                  active={self.current_tab.clone()}
+                >
+                    <Tab<Tabs>
+                      id={ Tabs::GenerateKeys }
+                      label={ "Generate keys" }
+                      onclick={ctx.link().callback(|_| {
+                          Msg::SwitchTab(Tabs::GenerateKeys)
+                      })}
+                    >
+                        {self.view_generate_keys_tab(ctx)}
+                    </Tab<Tabs>>
+                    <Tab<Tabs>
+                      id={ Tabs::RegisterKeys }
+                      label={ "Register existing keys" }
+                      onclick={ctx.link().callback(|_| {
+                          Msg::SwitchTab(Tabs::RegisterKeys)
+                      })}
+                    >
+                        {self.view_add_existing_keys_tab(ctx)}
+                    </Tab<Tabs>>
+                </TabGroup<Tabs>>
+            </>
         }
     }
 }
@@ -133,83 +165,75 @@ impl Component for Register {
 impl Register {
     fn view_generate_keys_tab(&self, ctx: &Context<Self>) -> Html {
         html! {
-          <form>
-            <div class="form-group">
-            {
-                self.view_username_input(ctx)
-            }
-            <small id="username-help" class="form-text text-muted">
-                { "Enter unique username that will be displayed" }
-            </small>
-            </div>
-            <button type="submit" class="btn btn-primary">
-              { "Generate identity" }
-            </button>
-          </form>
+            <form>
+                <div class="form-group">
+                {self.view_username_input(ctx)}
+                <small id="username-help" class="form-text text-muted">
+                    { "Enter unique username" }
+                </small>
+                </div>
+                {self.view_submit_btn(ctx)}
+            </form>
         }
     }
 
     fn view_add_existing_keys_tab(&self, ctx: &Context<Self>) -> Html {
         html! {
-          <form>
-            <div class="form-group">
-              {
-                  self.view_username_input(ctx)
-              }
-              <label for="public-key-input">
-                { "Public key" }
-              </label>
-              <input
-               type="text"
-               class="form-control"
-               id="public-key-input"
-               placeholder="Enter public key"
-               value={self.public_key.clone()}
-               oninput={ctx.link().callback(|event: InputEvent| {
-                 Msg::UpdateContent(FormContent::public_key(event.data()))
-               })}
-              />
-              <label for="private-key-input">
-                { "Private key" }
-              </label>
-              <input
-               type="text"
-               class="form-control"
-               id="private-key-input"
-               placeholder="Enter private key"
-               value={self.private_key.clone()}
-               oninput={ctx.link().callback(|event: InputEvent| {
-                 Msg::UpdateContent(FormContent::private_key(event.data()))
-               })}
-              />
-              <small id="private-key-info" class="form-text text-muted">
-                { "Your private key won't be sent anywhere, used only for creating signs" }
-              </small>
-            </div>
-            <button type="submit" class="btn btn-primary">
-              { "Register" }
-            </button>
-          </form>
+              <form>
+                  <div class="form-group">
+                      {self.view_username_input(ctx)}
+                      <InputText
+                        label={ "Public key" }
+                        placeholder={ "Enter public key" }
+                        value={self.public_key.clone()}
+                        oninput={ctx.link().callback(|event: InputEvent| {
+                            Msg::UpdateContent(FormContent::public_key(event.data()))
+                        })}
+                      />
+                      <InputText
+                        label={ "Private key" }
+                        placeholder={ "Enter private key" }
+                        value={ self.private_key.clone() }
+                        oninput={ctx.link().callback(|event: InputEvent| {
+                            Msg::UpdateContent(FormContent::private_key(event.data()))
+                        })}
+                      />
+                      <small id="private-key-info" class="form-text text-muted">
+                          { "Your private key won't be sent anywhere, used only for creating signs" }
+                      </small>
+                  </div>
+                  {self.view_submit_btn(ctx)}
+              </form>
         }
     }
 
     fn view_username_input(&self, ctx: &Context<Self>) -> Html {
         html! {
-          <>
-            <label for="username-input">
-                { "Username" }
-            </label>
-            <input
-              type="text"
-              class="form-control"
-              id="username-input"
-              placeholder="Enter username"
-              value={self.username.clone()}
-              oninput={ctx.link().callback(|event: InputEvent| {
-                Msg::UpdateContent(FormContent::username(event.data()))
-              })}
+            <InputText
+                label={ "Username" }
+                placeholder={ "Enter username" }
+                value={self.username.clone()}
+                oninput={ctx.link().callback(|event: InputEvent| {
+                    Msg::UpdateContent(FormContent::username(event.data()))
+                })}
             />
-          </>
         }
+    }
+
+    fn view_submit_btn(&self, ctx: &Context<Self>) -> Html {
+        html! {{
+              match self.state {
+                  State::Input => html! {
+                      <SubmitButton
+                        onclick={ctx.link().callback(|_| Msg::UpdateState(State::Send))}
+                        text={ "Generate identity" }
+                      />
+                  },
+                  State::Send => html! {
+                      <LoadingButton />
+                  },
+                  _ => html! {},
+              }
+        }}
     }
 }
