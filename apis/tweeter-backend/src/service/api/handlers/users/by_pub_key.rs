@@ -1,10 +1,9 @@
 use axum::{extract::Path, Extension, Json};
 use tweeter_schemas::users::UserResponse;
 
-use crate::{
-    records::{errors::Errors as RecordErrors, users::UsersRepo},
-    service::api::{errors::ErrorResponse, IMAGE_EXPR_SECS},
-};
+use crate::service::api::{errors::ErrorResponse, IMAGE_EXPR_SECS};
+
+use tweeter_repos::{errors::Errors as RecordErrors, users::UsersRepo};
 
 pub async fn handler(
     Path(pub_key): Path<String>,

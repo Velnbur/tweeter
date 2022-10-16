@@ -5,10 +5,9 @@ use tweeter_models::tweet::Tweet as TweetModel;
 use tweeter_schemas::tweets::{CreateTweetRequest, TweetResponse};
 use validator::Validate;
 
-use crate::{
-    records::{errors::Errors as RecordErrors, tweets::TweetsRepo, users::UsersRepo},
-    service::api::{auth::Claims, errors::ErrorResponse},
-};
+use crate::service::api::{auth::Claims, errors::ErrorResponse};
+
+use tweeter_repos::{errors::Errors as RecordErrors, tweets::TweetsRepo, users::UsersRepo};
 
 pub async fn handler(
     claims: Claims,

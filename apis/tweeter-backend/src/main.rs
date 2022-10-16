@@ -1,6 +1,6 @@
 mod cli;
 mod config;
-mod records;
+mod migrations;
 mod service;
 
 #[tokio::main]

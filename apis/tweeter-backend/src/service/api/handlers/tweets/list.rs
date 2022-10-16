@@ -2,6 +2,7 @@ use axum::{extract::Query, Extension, Json};
 use s3::error::S3Error;
 use sqlx::PgPool;
 use tweeter_models::{tweet::Tweet, user::User};
+use tweeter_repos::{errors::Errors, tweets::TweetsRepo, users::UsersRepo};
 use tweeter_schemas::{
     include::Include as IncludeTrait,
     query::{Include, Pagination},
@@ -9,10 +10,7 @@ use tweeter_schemas::{
     tweets::TweetListResponse,
 };
 
-use crate::{
-    records::{errors::Errors, tweets::TweetsRepo, users::UsersRepo},
-    service::api::{errors::ErrorResponse, IMAGE_EXPR_SECS},
-};
+use crate::service::api::{errors::ErrorResponse, IMAGE_EXPR_SECS};
 
 pub async fn handler(
     Query(pagination): Query<Pagination>,

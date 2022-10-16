@@ -4,7 +4,9 @@ use tweeter_models::user::User as UserModel;
 use tweeter_schemas::{auth_keys::AuthKeysResponse, users::CreateUserRequest};
 use validator::Validate;
 
-use crate::{records::users::UsersRepo, service::api::errors::ErrorResponse};
+use crate::service::api::errors::ErrorResponse;
+
+use tweeter_repos::{errors::Errors, users::UsersRepo};
 
 pub async fn handler(
     Json(body): Json<CreateUserRequest>,
@@ -23,9 +25,7 @@ pub async fn handler(
         .insert(user)
         .await
         .map_err(|err| match err {
-            crate::records::errors::Errors::InvalidUsername => {
-                ErrorResponse::Conflict(err.to_string())
-            }
+            Errors::InvalidUsername => ErrorResponse::Conflict(err.to_string()),
             _ => {
                 log::error!("Failed to create user: {err}");
                 ErrorResponse::InternalError

@@ -1,6 +1,6 @@
 use clap::Parser;
 
-use crate::{config::Config, records, service};
+use crate::{config::Config, migrations, service};
 
 /// Simple backend application
 #[derive(Parser, Debug)]
@@ -26,7 +26,7 @@ pub async fn run() {
     };
 
     if args.migrate {
-        match records::migrations::migrate(&config.db).await {
+        match migrations::migrate(&config.db).await {
             Ok(_) => (),
             Err(err) => {
                 log::error!("failed to migrate: {err}");

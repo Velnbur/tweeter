@@ -5,7 +5,7 @@ use sqlx::PgPool;
 use tokio::sync::mpsc::Receiver;
 use tweeter_models::tweet::Tweet;
 
-use crate::records::tweets::TweetsRepo;
+use tweeter_repos::tweets::TweetsRepo;
 
 pub struct Hasher {
     pool: PgPool,

@@ -1,6 +1,6 @@
-use crate::records::tables::{Tweets, Users};
 use sea_query::{ColumnDef, ForeignKey, ForeignKeyAction, PostgresQueryBuilder, Table};
 use sqlx::PgPool;
+use tweeter_repos::tables::{Tweets, Users};
 
 pub async fn migrate(pool: &PgPool) -> Result<(), sqlx::Error> {
     migrate_users(&pool).await?;
