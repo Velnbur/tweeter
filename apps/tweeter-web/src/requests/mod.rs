@@ -3,6 +3,8 @@ use serde_qs as qs;
 use std::fmt::Debug;
 use std::fmt::Display;
 use std::fmt::Formatter;
+use tweeter_schemas::users::CreateUser;
+use tweeter_schemas::users::CreateUserRequest;
 
 use tweeter_schemas::users::UserResponse;
 use tweeter_schemas::{
@@ -14,6 +16,7 @@ use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, RequestMode, Response};
 
+use crate::config::API_REGISTER;
 use crate::config::API_TWEETS_URL;
 use crate::config::API_USERS_URL;
 
@@ -75,7 +78,9 @@ pub async fn fetch_tweet(id: i64, user: bool) -> Result<TweetResponse, FetchErro
     let mut url = Url::parse(&raw).unwrap();
 
     if user {
-        url.query_pairs_mut().append_pair("include", "user");
+        url.query_pairs_mut()
+            .append_pair("include", "user")
+            .finish();
     }
 
     let mut opts = RequestInit::new();
@@ -99,6 +104,28 @@ pub async fn fetch_user(pub_key: &String) -> Result<UserResponse, FetchError> {
     opts.mode(RequestMode::Cors);
 
     let req = Request::new_with_str_and_init(&base_url, &opts)?;
+
+    let resp = fetch(req).await?;
+
+    let user: UserResponse = resp.into_serde().unwrap();
+
+    Ok(user)
+}
+
+pub async fn register_user(username: String) -> Result<UserResponse, FetchError> {
+    let body = CreateUserRequest {
+        data: CreateUser::new(username),
+    };
+
+    let serialized = JsValue::from_serde(&body)
+        .map_err(|err| FetchError::from(JsValue::from_str(err.to_string().as_str())))?;
+
+    let mut opts = RequestInit::new();
+    opts.method("POST");
+    opts.body(Some(&serialized));
+    opts.mode(RequestMode::Cors);
+
+    let req = Request::new_with_str_and_init(&API_REGISTER, &opts)?;
 
     let resp = fetch(req).await?;
 
