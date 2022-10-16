@@ -128,20 +128,17 @@ impl Component for Register {
                 }
                 State::Send => {
                     self.state = state;
-                    ctx.link()
-                        .send_future(Self::create_user(self.username.clone()));
+                    let link = ctx.link().clone();
+                    let username = self.username.clone();
+
+                    link.send_future(Self::create_user(username));
                     true
                 }
                 State::SuccessGenerateKeys(resp) => {
                     self.state = State::SuccessGenerateKeys(resp.clone());
 
-                    let (_, dispatch) = use_store::<UserState>();
-                    dispatch.set(UserState::from_auth_keys(resp.clone()));
-
-                    self.private_key = resp.data.attributes.private_key.clone();
-                    log::debug!("Private key: {}", self.private_key);
-                    self.public_key = resp.data.attributes.public_key.clone();
-                    log::debug!("Public key: {}", self.public_key);
+                    /* let (_, dispatch) = use_store::<UserState>();
+                    dispatch.set(UserState::from_auth_keys(resp.clone())); */
                     true
                 }
                 State::SuccessRegister(_) => todo!(),
@@ -154,10 +151,10 @@ impl Component for Register {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        match self.state {
+        match &self.state {
             State::Input => self.register_form(ctx),
             State::Send => self.loading_view(ctx),
-            State::SuccessGenerateKeys(_) => todo!(),
+            State::SuccessGenerateKeys(keys) => self.keys_view(ctx, keys.clone()),
             State::SuccessRegister(_) => todo!(),
             State::Failure => html! {
                 {"Something went wrong"}
@@ -172,17 +169,10 @@ impl Register {
             data: CreateUser::new(username),
         };
 
-        let body = match serde_json::to_string(&body) {
-            Ok(body) => body,
-            Err(err) => {
-                log::error!("Failed to create request {err}");
-                return Msg::UpdateState(State::Failure);
-            }
-        };
-
         let resp = Request::post(API_REGISTER)
-            .body(body)
-            .header("Content-Type", "application/json")
+            .mode(gloo_net::http::RequestMode::Cors)
+            .json(&body)
+            .unwrap()
             .send()
             .await;
 
@@ -313,6 +303,18 @@ impl Register {
                     </span>
                 </div>
             </div>
+        }
+    }
+
+    fn keys_view(&self, _ctx: &Context<Self>, auth_keys: AuthKeysResponse) -> Html {
+        html! {
+            <>
+                <h1> { "Your generated keys:" } </h1>
+                <p>
+                    {"Private key:"} <p class="font-monospace">{auth_keys.data.attributes.private_key}</p>
+                    {"Public key:"} <p class="font-monospace">{auth_keys.data.attributes.public_key}</p>
+                </p>
+            </>
         }
     }
 }
