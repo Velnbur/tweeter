@@ -1,9 +1,11 @@
 [workspace]
 members = [
     "apis/tweeter-backend",
+    "apis/tweeter-hasher",
     "apps/tweeter-web",
     "apps/tweeter-tool",
     "crates/tweeter-schemas",
     "crates/tweeter-models",
-    "crates/tweeter-auth"
+    "crates/tweeter-auth",
+    "crates/tweeter-repos"
 ]
