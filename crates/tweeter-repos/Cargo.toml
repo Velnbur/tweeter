@@ -1,0 +1,15 @@
+[package]
+name = "tweeter-repos"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+thiserror = "1.0.31"
+
+sea-query = { version = "^0", features = ["sqlx-postgres", "postgres"] }
+sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "postgres"] }
+
+tweeter-models = { path = "../tweeter-models", version = "0.1", features = [ "sqlx" ] }
+tweeter-schemas = { path = "../tweeter-schemas", version = "0.1" }
