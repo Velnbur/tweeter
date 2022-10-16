@@ -4,6 +4,7 @@ FROM rust:1.62-slim as builder
 ADD ./crates/tweeter-schemas /usr/src/crates/tweeter-schemas
 ADD ./crates/tweeter-models /usr/src/crates/tweeter-models
 ADD ./crates/tweeter-auth /usr/src/crates/tweeter-auth
+ADD ./crates/tweeter-repos /usr/src/crates/tweeter-repos
 
 # copy service code
 ADD ./apis/tweeter-backend /usr/src/apis/tweeter-backend

@@ -7,5 +7,7 @@ members = [
     "crates/tweeter-schemas",
     "crates/tweeter-models",
     "crates/tweeter-auth",
+    "crates/tweeter-config",
+    "crates/tweeter-mq",
     "crates/tweeter-repos"
 ]

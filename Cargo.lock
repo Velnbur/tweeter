@@ -2754,6 +2754,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "tweeter-config"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "lapin",
+ "log",
+ "serde",
+ "simplelog",
+ "sqlx",
+ "thiserror",
+ "tokio-executor-trait",
+ "tokio-reactor-trait",
+ "toml",
+]
+
+[[package]]
 name = "tweeter-hasher"
 version = "0.1.0"
 dependencies = [
@@ -2768,6 +2784,17 @@ name = "tweeter-models"
 version = "0.1.0"
 dependencies = [
  "sqlx",
+]
+
+[[package]]
+name = "tweeter-mq"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "lapin",
+ "serde",
+ "serde_json",
+ "thiserror",
 ]
 
 [[package]]
