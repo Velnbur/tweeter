@@ -16,6 +16,7 @@ use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, RequestMode, Response};
 
+use crate::config::API_REGISTER;
 use crate::config::API_TWEETS_URL;
 use crate::config::API_USERS_URL;
 
@@ -111,27 +112,27 @@ pub async fn fetch_user(pub_key: &String) -> Result<UserResponse, FetchError> {
     Ok(user)
 }
 
-// pub async fn register_user(username: String) -> Result<UserResponse, FetchError> {
-//     let body = CreateUserRequest {
-//         data: CreateUser::new(username),
-//     };
+pub async fn register_user(username: String) -> Result<UserResponse, FetchError> {
+    let body = CreateUserRequest {
+        data: CreateUser::new(username),
+    };
 
-//     let serialized = JsValue::from_serde(&body)
-//         .map_err(|err| FetchError::from(JsValue::from_str(err.to_string().as_str())))?;
+    let serialized = JsValue::from_serde(&body)
+        .map_err(|err| FetchError::from(JsValue::from_str(err.to_string().as_str())))?;
 
-//     let mut opts = RequestInit::new();
-//     opts.method("POST");
-//     opts.body(Some(&serialized));
-//     opts.mode(RequestMode::Cors);
+    let mut opts = RequestInit::new();
+    opts.method("POST");
+    opts.body(Some(&serialized));
+    opts.mode(RequestMode::Cors);
 
-//     let req = Request::new_with_str_and_init(&API_REGISTER, &opts)?;
+    let req = Request::new_with_str_and_init(&API_REGISTER, &opts)?;
 
-//     let resp = fetch(req).await?;
+    let resp = fetch(req).await?;
 
-//     let user: UserResponse = resp.into_serde().unwrap();
+    let user: UserResponse = resp.into_serde().unwrap();
 
-//     Ok(user)
-// }
+    Ok(user)
+}
 
 async fn fetch(req: Request) -> Result<JsValue, FetchError> {
     let window = gloo_utils::window();

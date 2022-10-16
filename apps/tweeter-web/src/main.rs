@@ -42,7 +42,7 @@ fn switch(routes: &Route) -> Html {
     }
 }
 
-#[function_component(Main)]
+#[function_component(App)]
 fn app() -> Html {
     html! {
       <div>
@@ -70,6 +70,6 @@ fn app() -> Html {
 }
 
 fn main() {
-    wasm_logger::init(wasm_logger::Config::new(log::Level::Debug));
-    yew::start_app::<Main>();
+    wasm_logger::init(wasm_logger::Config::new(config::LOG_LEVEL));
+    yew::start_app::<App>();
 }
