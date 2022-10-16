@@ -1,5 +1,4 @@
 pub mod errors;
-pub mod migrations;
 pub mod tables;
 pub mod tweets;
 pub mod users;
