@@ -16,3 +16,5 @@ sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "postgres"] }
 lapin = "2.1.1"
 tokio-reactor-trait = "1.1.0"
 tokio-executor-trait = "2.0.1"
+
+tweeter-mq = { version = "0.1.0", path = "../tweeter-mq" }
