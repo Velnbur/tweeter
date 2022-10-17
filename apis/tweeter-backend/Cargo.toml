@@ -56,3 +56,4 @@ tweeter-schemas = { path = "../../crates/tweeter-schemas", version = "0.1" }
 tweeter-models = { path = "../../crates/tweeter-models", version = "0.1", features = [ "sqlx" ] }
 tweeter-repos = { path = "../../crates/tweeter-repos", version = "0.1" }
 tweeter-auth = { path = "../../crates/tweeter-auth", version = "0.1"}
+tweeter-config = { path = "../../crates/tweeter-config", version = "0.1"}

@@ -5,6 +5,7 @@ ADD ./crates/tweeter-schemas /usr/src/crates/tweeter-schemas
 ADD ./crates/tweeter-models /usr/src/crates/tweeter-models
 ADD ./crates/tweeter-auth /usr/src/crates/tweeter-auth
 ADD ./crates/tweeter-repos /usr/src/crates/tweeter-repos
+ADD ./crates/tweeter-config /usr/src/crates/tweeter-config
 
 # copy service code
 ADD ./apis/tweeter-backend /usr/src/apis/tweeter-backend

@@ -2,13 +2,13 @@ use std::net::AddrParseError;
 
 use serde::Deserialize;
 use thiserror::Error;
-
-use super::{
+use tweeter_config::{
     db::DB,
     logger::{self, Logger},
-    server::Server,
-    storage::Storage,
+    Parseable,
 };
+
+use super::{server::Server, storage::Storage};
 use crate::config::Config;
 
 #[derive(Deserialize)]
@@ -33,7 +33,7 @@ pub enum Error {
 
 impl Raw {
     pub async fn parse(self) -> Result<Config, Error> {
-        self.logger.init().map_err(Error::LoggerError)?;
+        self.logger.parse().await?;
 
         Ok(Config {
             server: self.server.parse()?,
