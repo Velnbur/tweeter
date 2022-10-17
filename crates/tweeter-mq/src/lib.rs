@@ -7,8 +7,11 @@ pub trait Channel<T>
 where
     for<'a> T: Deserialize<'a> + Serialize,
 {
-    type Error;
+    type Error: std::error::Error;
 
-    async fn consume(&mut self) -> Result<T, Self::Error>;
-    async fn publish(&mut self, value: T) -> Result<(), Self::Error>;
+    async fn consume<F>(&self, f: F) -> Result<(), Self::Error>
+    where
+        F: Fn(T) -> Result<(), Self::Error> + Send;
+
+    async fn publish(&self, value: T) -> Result<(), Self::Error>;
 }
