@@ -1,5 +1,4 @@
 use lapin::options::QueueDeclareOptions;
-use lapin::protocol::channel;
 use lapin::types::FieldTable;
 use lapin::{Connection, ConnectionProperties};
 use serde::Deserialize;
