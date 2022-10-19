@@ -1,5 +1,6 @@
 #[cfg_attr(feature = "sqlx", derive(sqlx::FromRow))]
-#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize))]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct User {
     pub public_key: String,
     pub username: String,
