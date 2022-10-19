@@ -1,5 +1,5 @@
 #[cfg_attr(feature = "sqlx", derive(sqlx::FromRow))]
-#[cfg_attr(feature = "serde", derive(serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct Tweet {
     pub id: i64,
