@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use std::{fs, string::ParseError};
+use std::fs;
 use thiserror::Error;
 
 use crate::Parseable;
