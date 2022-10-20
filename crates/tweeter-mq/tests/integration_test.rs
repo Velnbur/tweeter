@@ -1,14 +1,23 @@
 mod common;
 
-use std::str::FromStr;
-
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
+use thiserror::Error;
 use tweeter_mq::rabbit::RabbitChannel;
-use tweeter_mq::Channel;
+use tweeter_mq::{Consumer, Publisher};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Payload {
     pub msg: String,
+}
+
+const MSG: &'static str = "Hello, world!";
+
+#[derive(Error, Debug)]
+enum Error {
+    #[error("test messgae")]
+    #[warn(dead_code)]
+    Err,
 }
 
 #[tokio::test]
@@ -19,16 +28,15 @@ async fn test_one_publish_consume() {
 
     let rabbit = RabbitChannel::new(q_name, channel);
 
-    let msg = String::from_str("Hello, world!").unwrap();
-
+    let msg = String::from_str(MSG).unwrap();
     let payload = Payload { msg: msg.clone() };
 
     rabbit.publish(payload).await.unwrap();
 
     rabbit
-        .consume(move |entry: Payload| {
+        .consume(move |entry: Payload| async move {
             assert_eq!(entry.msg, msg);
-            Ok(())
+            Ok::<(), Error>(())
         })
         .await
         .unwrap();
