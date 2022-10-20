@@ -1,0 +1,5 @@
+[db]
+url = "postgresql://tweeter:tweeter@localhost:5432/tweeter"
+
+[logger]
+level = "debug"

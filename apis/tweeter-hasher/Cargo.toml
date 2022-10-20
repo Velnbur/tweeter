@@ -7,6 +7,15 @@ edition = "2021"
 
 [dependencies]
 tokio = { version = "1.20.1", features = ["full"] }
+sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "postgres"] }
+async-trait = "0.1.57"
+thiserror = "1.0.31"
 lapin = "2.1.1"
-tokio-reactor-trait = "1.1.0"
-tokio-executor-trait = "2.0.1"
+serde = { version = "1.0", features = ["derive"] }
+sha3 = "0.10.2"
+bs58 = "0.4.0"
+
+tweeter-config = { path = "../../crates/tweeter-config", version = "0.1" }
+tweeter-repos = { path = "../../crates/tweeter-repos", version = "0.1" }
+tweeter-models = { path = "../../crates/tweeter-models", features = ["serde"], version = "0.1"}
+tweeter-mq = { path = "../../crates/tweeter-mq", version = "0.1" }

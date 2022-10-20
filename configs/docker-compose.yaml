@@ -1,10 +1,10 @@
 name: tweeter
 
 services:
-  frontend:
-    image: ghcr.io/velnbur/tweeter-frontend:master
-    depends_on:
-      - backend
+  #  frontend:
+  #    image: ghcr.io/velnbur/tweeter-frontend:master
+  #    depends_on:
+  #- backend
 
   backend:
     image: ghcr.io/velnbur/tweeter-backend:master
@@ -16,7 +16,13 @@ services:
         source: ./backend.toml
         target: /etc/config.yaml
         read_only: true
-    entrypoint: ["service", "--config", "/etc/config.yaml", "--migrate"]
+    entrypoint:
+      [
+        "service",
+        "--config",
+        "/etc/config.yaml",
+        "--migrate"
+      ]
 
   db:
     image: postgres:12-alpine
@@ -50,7 +56,7 @@ services:
       - 80:80
     depends_on:
       - backend
-      - frontend
+    # - frontend
 
 volumes:
   db-data: {}

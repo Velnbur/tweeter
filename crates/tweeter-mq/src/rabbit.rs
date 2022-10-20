@@ -7,7 +7,7 @@ use lapin::{
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::{Consumer, Publisher};
+use crate::{Consumer, Producer};
 
 #[derive(Clone)]
 pub struct RabbitChannel {
@@ -22,30 +22,19 @@ impl RabbitChannel {
 }
 
 #[derive(Error, Debug)]
-pub enum BaseError {
+pub enum Error {
     #[error("failed to serialize value: {0}")]
     SerializeError(#[from] serde_json::Error),
     #[error("failed to interact with rabbit: {0}")]
     QueueError(#[from] lapin::Error),
 }
 
-#[derive(Error, Debug)]
-pub enum Error<E>
-where
-    E: std::error::Error,
-{
-    #[error(transparent)]
-    Base(#[from] BaseError),
-    #[error(transparent)]
-    ConsumeError(E),
-}
-
 #[async_trait::async_trait]
-impl<T> Publisher<T> for RabbitChannel
+impl<T> Producer<T> for RabbitChannel
 where
     for<'a> T: Deserialize<'a> + Serialize + Send + 'static,
 {
-    type Error = BaseError;
+    type Error = Error;
 
     async fn publish(&self, value: T) -> Result<(), Self::Error> {
         let payload = serde_json::to_string(&value)?;
@@ -66,36 +55,48 @@ where
 }
 
 #[async_trait::async_trait]
-impl<T, CE> Consumer<T, CE> for RabbitChannel
+impl<T> Consumer<T> for RabbitChannel
 where
     for<'a> T: Deserialize<'a> + Serialize + Send + 'static,
-    CE: std::error::Error,
 {
-    type Error = Error<CE>;
+    type Error = Error;
 
-    async fn consume<F, Fut>(&self, f: F) -> Result<(), Self::Error>
+    async fn consume<F, Fut, CE>(&self, f: F) -> Result<(), Self::Error>
     where
-        F: FnOnce(T) -> Fut + Send,
+        F: Fn(T) -> Fut + Send + Sync,
         Fut: Future<Output = Result<(), CE>> + Send + 'static,
+        CE: std::error::Error,
     {
+        loop {
+            let delivery = self
+                .chan
+                .basic_get(&self.q_name, BasicGetOptions::default())
+                .await?;
+
+            if let Some(message) = delivery {
+                let parsed: T = serde_json::from_slice(message.data.as_slice())?;
+
+                f(parsed).await?;
+
+                message.ack(BasicAckOptions::default()).await?;
+            }
+        }
+    }
+
+    async fn get(&self) -> Result<Option<T>, Self::Error> {
         let delivery = self
             .chan
             .basic_get(&self.q_name, BasicGetOptions::default())
-            .await
-            .map_err(BaseError::QueueError)?;
+            .await?;
 
         if let Some(message) = delivery {
-            let parsed: T = serde_json::from_slice(message.data.as_slice())
-                .map_err(BaseError::SerializeError)?;
+            let parsed: T = serde_json::from_slice(message.data.as_slice())?;
 
-            f(parsed).await.map_err(Error::ConsumeError)?;
+            message.ack(BasicAckOptions::default()).await?;
 
-            message
-                .ack(BasicAckOptions::default())
-                .await
-                .map_err(BaseError::QueueError)?;
+            return Ok(Some(parsed));
         }
 
-        Ok(())
+        Ok(None)
     }
 }

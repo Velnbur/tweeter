@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use thiserror::Error;
 use tweeter_mq::rabbit::RabbitChannel;
-use tweeter_mq::{Consumer, Publisher};
+use tweeter_mq::{Consumer, Producer};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Payload {
@@ -33,11 +33,5 @@ async fn test_one_publish_consume() {
 
     rabbit.publish(payload).await.unwrap();
 
-    rabbit
-        .consume(move |entry: Payload| async move {
-            assert_eq!(entry.msg, msg);
-            Ok::<(), Error>(())
-        })
-        .await
-        .unwrap();
+    let payload: Payload = rabbit.get().await.unwrap().unwrap();
 }

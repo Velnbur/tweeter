@@ -28,12 +28,25 @@ version = "7.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "acc7cad07d1b4533fcb46f0819a6126fa201fd0385469aba75e405424f3fe009"
 dependencies = [
+ "amq-protocol-codegen",
  "amq-protocol-tcp",
  "amq-protocol-types",
  "amq-protocol-uri",
  "cookie-factory",
  "nom",
  "serde",
+]
+
+[[package]]
+name = "amq-protocol-codegen"
+version = "7.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1270dceda8d306bb342bab702fdd49a5bd2a3103d355e4cc220fcc6c1d344ab"
+dependencies = [
+ "amq-protocol-types",
+ "handlebars",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -1056,6 +1069,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "handlebars"
+version = "4.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "433e4ab33f1213cdc25b5fa45c76881240cfe79284cf2b395e8b9e312a30a2fd"
+dependencies = [
+ "log",
+ "pest",
+ "pest_derive",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1327,6 +1354,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bd03ea5831b44775e296239a64851e2fd14a80a363d202ba147009ffc994ff0f"
 dependencies = [
  "amq-protocol",
+ "amq-protocol-codegen",
  "async-global-executor-trait",
  "async-reactor-trait",
  "async-trait",
@@ -1338,6 +1366,7 @@ dependencies = [
  "pinky-swear",
  "reactor-trait",
  "serde",
+ "serde_json",
  "tracing",
  "waker-fn",
 ]
@@ -1607,6 +1636,50 @@ name = "percent-encoding"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d4fd5641d01c8f18a23da7b6fe29298ff4b55afcccdf78973b24cf3175fee32e"
+
+[[package]]
+name = "pest"
+version = "2.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dbc7bc69c062e492337d74d59b120c274fd3d261b6bf6d3207d499b4b379c41a"
+dependencies = [
+ "thiserror",
+ "ucd-trie",
+]
+
+[[package]]
+name = "pest_derive"
+version = "2.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "60b75706b9642ebcb34dab3bc7750f811609a0eb1dd8b88c2d15bf628c1c65b2"
+dependencies = [
+ "pest",
+ "pest_generator",
+]
+
+[[package]]
+name = "pest_generator"
+version = "2.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f4f9272122f5979a6511a749af9db9bfc810393f63119970d7085fed1c4ea0db"
+dependencies = [
+ "pest",
+ "pest_meta",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "pest_meta"
+version = "2.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4c8717927f9b79515e565a64fe46c38b8cd0427e64c40680b14a7365ab09ac8d"
+dependencies = [
+ "once_cell",
+ "pest",
+ "sha1",
+]
 
 [[package]]
 name = "pin-project"
@@ -2747,6 +2820,7 @@ dependencies = [
  "tokio",
  "toml",
  "tweeter-auth",
+ "tweeter-config",
  "tweeter-models",
  "tweeter-repos",
  "tweeter-schemas",
@@ -2767,22 +2841,32 @@ dependencies = [
  "tokio-executor-trait",
  "tokio-reactor-trait",
  "toml",
+ "tweeter-mq",
 ]
 
 [[package]]
 name = "tweeter-hasher"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
+ "bs58",
  "lapin",
+ "serde",
+ "sha3",
+ "sqlx",
+ "thiserror",
  "tokio",
- "tokio-executor-trait",
- "tokio-reactor-trait",
+ "tweeter-config",
+ "tweeter-models",
+ "tweeter-mq",
+ "tweeter-repos",
 ]
 
 [[package]]
 name = "tweeter-models"
 version = "0.1.0"
 dependencies = [
+ "serde",
  "sqlx",
 ]
 
@@ -2792,9 +2876,13 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "lapin",
+ "log",
  "serde",
  "serde_json",
  "thiserror",
+ "tokio",
+ "tokio-executor-trait",
+ "tokio-reactor-trait",
 ]
 
 [[package]]
@@ -2857,6 +2945,12 @@ name = "typenum"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dcf81ac59edc17cc8697ff311e8f5ef2d99fcbd9817b34cec66f90b6c3dfd987"
+
+[[package]]
+name = "ucd-trie"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e79c4d996edb816c91e4308506774452e55e95c3c9de07b6729e17e15a5ef81"
 
 [[package]]
 name = "unicode-bidi"
